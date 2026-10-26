@@ -1,0 +1,18 @@
+# Entorno virtual (cada integrante crea el suyo)
+venv/
+.venv/
+
+# Archivos que Python genera solo
+__pycache__/
+*.pyc
+
+# Base de datos local (cada integrante la crea con migrate)
+db.sqlite3
+
+# Audios que suben los usuarios
+media/
+
+# Editor y sistema
+.vscode/
+.DS_Store
+Thumbs.db

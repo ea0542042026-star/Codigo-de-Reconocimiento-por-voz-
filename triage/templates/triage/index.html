@@ -1,0 +1,368 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TriageVoz | Panel de Administrador</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Enlace al archivo de estilos (style.css) -->
+  <link rel="stylesheet" href="{% static 'triage/style.css' %}?v=2">
+</head>
+<body>
+
+  <!-- =========================================================
+       ÍCONOS (se definen una vez y se usan con <use href="#...">)
+       ========================================================= -->
+  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-inicio" viewBox="0 0 24 24"><path d="M12 3 2 12h3v8h5v-6h4v6h5v-8h3z"/></symbol>
+    <symbol id="i-pacientes" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M1 20c0-4 4-6 8-6s8 2 8 6z"/><circle cx="17.5" cy="7" r="3"/><path d="M18 12.5c3 .2 5 2.2 5 5.5h-4.2c0-2.2-.4-4-.8-5.5z"/></symbol>
+    <symbol id="i-micro" viewBox="0 0 24 24"><rect x="8.5" y="2" width="7" height="12" rx="3.5"/><path d="M5 11a7 7 0 0 0 14 0" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 18h2v4h-2z"/></symbol>
+    <symbol id="i-archivo" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M5 2h9l5 5v15H5zM8 11h8v2H8zm0 4h8v2H8z"/></symbol>
+    <symbol id="i-nlp" viewBox="0 0 24 24"><path d="M6 6 12 18 18 6z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="6" cy="6" r="3.2"/><circle cx="18" cy="6" r="3.2"/><circle cx="12" cy="18" r="3.2"/></symbol>
+    <symbol id="i-triage" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2 4 5v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V5zM11 8h2v3h3v2h-3v3h-2v-3H8v-2h3z"/></symbol>
+    <symbol id="i-historial" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1 4.5h2v5h4v2h-6z"/></symbol>
+    <symbol id="i-reportes" viewBox="0 0 24 24"><path d="M2 20h20v2H2zM4 12h4v7H4zm6-6h4v13h-4zm6 3h4v10h-4z"/></symbol>
+    <symbol id="i-usuarios" viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.5"/><circle cx="16" cy="8" r="3.5"/><path d="M0 20c0-3.5 3.5-5.5 8-5.5 1.5 0 2.8.2 4 .7 1.2-.5 2.5-.7 4-.7 4.5 0 8 2 8 5.5z"/></symbol>
+    <symbol id="i-config" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="3.4 3.27"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="3.5"/></symbol>
+    <symbol id="i-barras" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-campana" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-6 6v4.5L4 17h16l-2-3.5V9a6 6 0 0 0-6-6zM10 20a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-avatar" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 1a11 11 0 1 0 0 22 11 11 0 0 0 0-22zm0 4.5a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM5.5 18.5c1.3-2 3.7-3.3 6.5-3.3s5.2 1.3 6.5 3.3A9 9 0 0 1 12 21a9 9 0 0 1-6.5-2.5z"/></symbol>
+    <symbol id="i-flecha-abajo" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.5"/></symbol>
+    <symbol id="i-flecha-der" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.5"/></symbol>
+    <symbol id="i-calendario" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 2v5M16 2v5" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-alerta" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2 1 21h22zM11 9h2v6h-2zm0 8h2v2h-2z"/></symbol>
+    <symbol id="i-ojo" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7zm0 3.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7z"/></symbol>
+    <symbol id="i-salir" viewBox="0 0 24 24"><path d="M10 4H5v16h5M15 8l4 4-4 4M9 12h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </svg>
+
+  <div class="contenedor" id="contenedor">
+
+    <!-- ================= MENÚ LATERAL ================= -->
+    <aside class="sidebar">
+      <div class="logo">Triage<span>Voz</span></div>
+      <ul class="menu">
+        <li><a href="#" class="activo"><svg class="icono"><use href="#i-inicio"/></svg> Inicio</a></li>
+        <li><a href="#"><svg class="icono"><use href="#i-pacientes"/></svg> Pacientes</a></li>
+        <li><a href="#"><svg class="icono"><use href="#i-micro"/></svg> Grabación de Audio</a></li>
+        <li><a href="#"><svg class="icono"><use href="#i-archivo"/></svg> Transcripción</a></li>
+        <li><a href="#"><svg class="icono"><use href="#i-nlp"/></svg> Análisis NLP</a></li>
+        <li><a href="#"><svg class="icono"><use href="#i-triage"/></svg> Triage</a></li>
+        <li><a href="#"><svg class="icono"><use href="#i-historial"/></svg> Historial</a></li>
+        <li><a href="#"><svg class="icono"><use href="#i-reportes"/></svg> Reportes</a></li>
+        <li><a href="#"><svg class="icono"><use href="#i-usuarios"/></svg> Usuarios</a></li>
+        <li><a href="#"><svg class="icono"><use href="#i-config"/></svg> Configuración</a></li>
+      </ul>
+    </aside>
+
+    <main class="principal">
+
+      <!-- ================= BARRA SUPERIOR ================= -->
+      <header class="topbar">
+        <button class="btn-icono" id="btnMenu" aria-label="Mostrar u ocultar menú">
+          <svg class="icono"><use href="#i-barras"/></svg>
+        </button>
+
+        <div class="topbar-derecha">
+          <!-- Botón de la campana -->
+          <button class="btn-icono notificacion" id="btnCampana" aria-label="Notificaciones">
+            <svg class="icono"><use href="#i-campana"/></svg>
+            <span class="punto" id="puntoRojo"></span>
+          </button>
+
+          <!-- Botón del usuario con su menú desplegable -->
+          <div class="usuario-caja">
+            <button class="btn-usuario" id="btnUsuario" aria-label="Menú del usuario">
+              <svg class="avatar"><use href="#i-avatar"/></svg>
+              <span class="usuario-texto">
+                <strong>Administrador</strong>
+                <small>Administrador del sistema</small>
+              </span>
+              <svg class="icono flecha"><use href="#i-flecha-abajo"/></svg>
+            </button>
+            <div class="menu-usuario" id="menuUsuario">
+              <a href="#"><svg class="icono"><use href="#i-avatar"/></svg> Mi perfil</a>
+              <a href="#"><svg class="icono"><use href="#i-config"/></svg> Configuración</a>
+              <a href="#" class="salir"><svg class="icono"><use href="#i-salir"/></svg> Cerrar sesión</a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="contenido">
+
+        <!-- ================= BANNER DE BIENVENIDA ================= -->
+        <div class="bienvenida">
+          <div class="bienvenida-logo">
+            <!-- Estetoscopio -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
+              <path d="M5 3H4v6a5 5 0 0 0 10 0V3h-1"/>
+              <path d="M9 14v1.5a5 5 0 0 0 10 0V13"/>
+              <circle cx="19" cy="11" r="2"/>
+            </svg>
+          </div>
+
+          <div class="bienvenida-texto">
+            <h1>Bienvenido, Administrador</h1>
+            <p>Panel de control del sistema de Reconocimiento de Voz para Triage.
+               Aquí puedes gestionar pacientes, revisar registros, monitorear el sistema
+               y generar reportes.</p>
+          </div>
+
+          <div class="bienvenida-derecha">
+            <!-- Línea de latido del corazón -->
+            <svg class="latido" viewBox="0 0 160 40" fill="none" stroke="#1e3a8a" stroke-width="1.5">
+              <polyline points="0,22 25,22 32,15 38,30 45,8 52,32 58,18 64,22 72,22 78,5 85,35 92,12 98,26 104,20 110,22 118,6 124,34 130,22 160,22"/>
+            </svg>
+            <div class="fecha">
+              <svg class="icono"><use href="#i-calendario"/></svg>
+              <div>
+                <span id="fecha">27 de abril de 2025</span>
+                <small id="hora">10:24 a.m.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= TARJETAS ================= -->
+        <div class="tarjetas">
+          <div class="tarjeta">
+            <div class="cuadro-icono azul"><svg class="icono"><use href="#i-pacientes"/></svg></div>
+            <div>
+              <h3>Total de pacientes</h3>
+              <p class="numero">48</p>
+              <p class="cambio"><span class="sube">↑ +5</span> esta semana</p>
+            </div>
+          </div>
+
+          <div class="tarjeta">
+            <div class="cuadro-icono verde"><svg class="icono"><use href="#i-micro"/></svg></div>
+            <div>
+              <h3>Audios procesados</h3>
+              <p class="numero">36</p>
+              <p class="cambio"><span class="sube">↑ +8</span> esta semana</p>
+            </div>
+          </div>
+
+          <div class="tarjeta">
+            <div class="cuadro-icono morado"><svg class="icono"><use href="#i-archivo"/></svg></div>
+            <div>
+              <h3>Transcripciones</h3>
+              <p class="numero">34</p>
+              <p class="cambio"><span class="sube">↑ +7</span> esta semana</p>
+            </div>
+          </div>
+
+          <div class="tarjeta">
+            <div class="cuadro-icono rojo"><svg class="icono"><use href="#i-alerta"/></svg></div>
+            <div>
+              <h3>Alertas de triage</h3>
+              <p class="numero">5</p>
+              <p class="cambio"><span class="alerta">↑ +2</span> esta semana</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= GRÁFICAS ================= -->
+        <div class="fila">
+
+          <!-- Gráfica de líneas -->
+          <div class="panel">
+            <div class="panel-titulo">
+              <h2>Estadísticas generales</h2>
+              <ul class="leyenda">
+                <li><span class="bolita azul"></span> Pacientes</li>
+                <li><span class="bolita verde"></span> Audios</li>
+                <li><span class="bolita morado"></span> Transcripciones</li>
+              </ul>
+            </div>
+
+            <svg class="grafica" viewBox="0 0 520 240">
+              <!-- Fondo y líneas guía -->
+              <rect x="40" y="20" width="460" height="180" class="grafica-fondo"/>
+              <g class="grafica-guias">
+                <line x1="40" y1="20"  x2="500" y2="20"/>
+                <line x1="40" y1="56"  x2="500" y2="56"/>
+                <line x1="40" y1="92"  x2="500" y2="92"/>
+                <line x1="40" y1="128" x2="500" y2="128"/>
+                <line x1="40" y1="164" x2="500" y2="164"/>
+              </g>
+              <!-- Números del eje vertical (0 a 50) -->
+              <g class="grafica-texto">
+                <text x="30" y="24">50</text>
+                <text x="30" y="60">40</text>
+                <text x="30" y="96">30</text>
+                <text x="30" y="132">20</text>
+                <text x="30" y="168">10</text>
+                <text x="30" y="204">0</text>
+              </g>
+              <!-- Días de la semana -->
+              <g class="grafica-texto dias">
+                <text x="60"  y="225">Lun</text>
+                <text x="130" y="225">Mar</text>
+                <text x="200" y="225">Mié</text>
+                <text x="270" y="225">Jue</text>
+                <text x="340" y="225">Vie</text>
+                <text x="410" y="225">Sáb</text>
+                <text x="480" y="225">Dom</text>
+              </g>
+              <!-- Línea de pacientes -->
+              <polyline class="linea azul" points="60,146 130,99 200,117 270,117 340,88 410,60 480,42"/>
+              <!-- Línea de audios -->
+              <polyline class="linea verde" points="60,157 130,128 200,139 270,139 340,114 410,81 480,63"/>
+              <!-- Línea de transcripciones -->
+              <polyline class="linea morado" points="60,171 130,157 200,160 270,160 340,135 410,106 480,81"/>
+              <!-- Puntos de cada día (círculos sobre las líneas) -->
+              <g class="puntos azul">
+                <circle cx="60" cy="146" r="4"/><circle cx="130" cy="99" r="4"/><circle cx="200" cy="117" r="4"/><circle cx="270" cy="117" r="4"/><circle cx="340" cy="88" r="4"/><circle cx="410" cy="60" r="4"/><circle cx="480" cy="42" r="4"/>
+              </g>
+              <g class="puntos verde">
+                <circle cx="60" cy="157" r="4"/><circle cx="130" cy="128" r="4"/><circle cx="200" cy="139" r="4"/><circle cx="270" cy="139" r="4"/><circle cx="340" cy="114" r="4"/><circle cx="410" cy="81" r="4"/><circle cx="480" cy="63" r="4"/>
+              </g>
+              <g class="puntos morado">
+                <circle cx="60" cy="171" r="4"/><circle cx="130" cy="157" r="4"/><circle cx="200" cy="160" r="4"/><circle cx="270" cy="160" r="4"/><circle cx="340" cy="135" r="4"/><circle cx="410" cy="106" r="4"/><circle cx="480" cy="81" r="4"/>
+              </g>
+            </svg>
+          </div>
+
+          <!-- Gráfica de dona -->
+          <div class="panel">
+            <div class="panel-titulo">
+              <h2>Distribución de prioridades</h2>
+            </div>
+            <div class="dona-caja">
+              <div class="dona">
+                <div class="dona-centro">
+                  <strong>48</strong>
+                  <small>pacientes</small>
+                </div>
+              </div>
+              <ul class="dona-lista">
+                <li><span class="bolita critica"></span> Crítica <b>10 (21%)</b></li>
+                <li><span class="bolita alta"></span> Alta <b>15 (31%)</b></li>
+                <li><span class="bolita media"></span> Media <b>13 (27%)</b></li>
+                <li><span class="bolita baja"></span> Baja <b>10 (21%)</b></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= TABLA Y ACCIONES RÁPIDAS ================= -->
+        <div class="fila">
+
+          <!-- Últimos pacientes -->
+          <div class="panel">
+            <div class="panel-titulo">
+              <h2>Últimos pacientes registrados</h2>
+              <button class="btn-enlace" id="btnVerTodos">
+                Ver todos <svg class="icono"><use href="#i-flecha-der"/></svg>
+              </button>
+            </div>
+
+            <div class="tabla-caja">
+              <table class="tabla">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Edad</th>
+                    <th>Fecha/Hora</th>
+                    <th>Prioridad</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>María López</td>
+                    <td>34</td>
+                    <td>2025-04-27 10:24</td>
+                    <td><span class="etiqueta prioridad-2">Prioridad 2</span></td>
+                    <td><span class="etiqueta proceso">En proceso</span></td>
+                  </tr>
+                  <tr>
+                    <td>Juan Pérez</td>
+                    <td>56</td>
+                    <td>2025-04-27 09:50</td>
+                    <td><span class="etiqueta prioridad-3">Prioridad 3</span></td>
+                    <td><span class="etiqueta pendiente">Pendiente</span></td>
+                  </tr>
+                  <tr>
+                    <td>Ana Torres</td>
+                    <td>28</td>
+                    <td>2025-04-27 08:32</td>
+                    <td><span class="etiqueta prioridad-1">Prioridad 1</span></td>
+                    <td><span class="etiqueta proceso">En proceso</span></td>
+                  </tr>
+                  <tr>
+                    <td>Carlos Gómez</td>
+                    <td>41</td>
+                    <td>2025-04-27 07:15</td>
+                    <td><span class="etiqueta prioridad-4">Prioridad 4</span></td>
+                    <td><span class="etiqueta completado">Completado</span></td>
+                  </tr>
+                  <tr>
+                    <td>Lucía Fernández</td>
+                    <td>23</td>
+                    <td>2025-04-26 16:42</td>
+                    <td><span class="etiqueta prioridad-2">Prioridad 2</span></td>
+                    <td><span class="etiqueta completado">Completado</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Acciones rápidas: cada una es un botón -->
+          <div class="panel">
+            <div class="panel-titulo">
+              <h2>Acciones rápidas</h2>
+            </div>
+
+            <div class="acciones">
+              <button class="btn-accion" data-accion="Registrar paciente">
+                <span class="cuadro-icono azul"><svg class="icono"><use href="#i-pacientes"/></svg></span>
+                Registrar paciente
+                <svg class="icono flecha"><use href="#i-flecha-der"/></svg>
+              </button>
+
+              <button class="btn-accion" data-accion="Grabar audio">
+                <span class="cuadro-icono verde"><svg class="icono"><use href="#i-micro"/></svg></span>
+                Grabar audio
+                <svg class="icono flecha"><use href="#i-flecha-der"/></svg>
+              </button>
+
+              <button class="btn-accion" data-accion="Ver historial">
+                <span class="cuadro-icono morado"><svg class="icono"><use href="#i-ojo"/></svg></span>
+                Ver historial
+                <svg class="icono flecha"><use href="#i-flecha-der"/></svg>
+              </button>
+
+              <button class="btn-accion" data-accion="Generar reporte">
+                <span class="cuadro-icono naranja"><svg class="icono"><use href="#i-archivo"/></svg></span>
+                Generar reporte
+                <svg class="icono flecha"><use href="#i-flecha-der"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aquí puedes agregar más secciones -->
+
+      </section>
+
+      <!-- ================= PIE DE PÁGINA ================= -->
+      <footer class="pie">
+        <strong>TriageVoz</strong> | Sistema de Reconocimiento de Voz para Triage
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Mensaje que aparece al hacer clic en una acción -->
+  <div class="aviso" id="aviso"></div>
+
+  <!-- Enlace al archivo de JavaScript -->
+  <script src="{% static 'triage/script.js' %}"></script>
+
+</body>
+</html>
