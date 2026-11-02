@@ -1,134 +1,126 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TriageVoz | Grabación de Audio</title>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'triage/style.css' %}?v=2">
+{% extends 'triage/base.html' %}
 
-  <!-- Estilos solo de esta página -->
-  <style>
-    .pagina-audio { max-width: 640px; margin: 40px auto; padding: 0 16px; }
-    .pagina-audio p { font-size: 14px; line-height: 1.5; }
-    .botones { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
-    .boton:disabled { opacity: .5; cursor: not-allowed; }
-    .estado { font-size: 14px; font-weight: 600; }
-    .estado.ok { color: var(--verde); }
-    .estado.error { color: var(--rojo); }
-    .prueba { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5e7eb; }
-    audio { width: 100%; margin-top: 12px; }
-    .volver { display: inline-block; margin-bottom: 12px; font-size: 13px; }
-  </style>
-</head>
-<body>
-  <main class="pagina-audio">
-    <a class="volver" href="{% url 'triage:inicio' %}">← Volver al panel</a>
+{% block titulo %}Grabación de Audio{% endblock %}
 
-    <section class="panel">
-      <div class="panel-titulo"><h2>Grabación de audio</h2></div>
-      <p>Presiona <strong>Grabar</strong>, describe los síntomas y luego presiona <strong>Detener</strong>. El audio se enviará al servidor automáticamente.</p>
+{% block estilos %}
+<style>
+  .pagina-audio { max-width: 640px; }
+  .pagina-audio p { font-size: 14px; line-height: 1.5; }
+  .botones { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
+  .boton:disabled { opacity: .5; cursor: not-allowed; }
+  .estado { font-size: 14px; font-weight: 600; }
+  .estado.ok { color: var(--verde); }
+  .estado.error { color: var(--rojo); }
+  .prueba { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5e7eb; }
+  .prueba h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+  audio { width: 100%; margin-top: 12px; }
+</style>
+{% endblock %}
 
-      <div class="botones">
-        <button id="btnGrabar" class="boton verde">● Grabar</button>
-        <button id="btnDetener" class="boton rojo" disabled>■ Detener</button>
-      </div>
+{% block contenido %}
+<div class="panel pagina-audio">
+  <div class="panel-titulo"><h2>Grabación de audio</h2></div>
+  <p>Presiona <strong>Grabar</strong>, describe los síntomas y luego presiona <strong>Detener</strong>. El audio se enviará al servidor automáticamente.</p>
 
-      <p id="estado" class="estado">Listo para grabar</p>
-      <audio id="reproductor" controls hidden></audio>
+  <div class="botones">
+    <button id="btnGrabar" class="boton verde">● Grabar</button>
+    <button id="btnDetener" class="boton rojo" disabled>■ Detener</button>
+  </div>
 
-      <!-- Pruebas de T016 -->
-      <div class="prueba">
-        <h2>Probar con un archivo</h2>
-        <input type="file" id="archivo">
-        <div class="botones">
-          <button id="btnEnviarArchivo" class="boton borde">Enviar archivo</button>
-          <button id="btnEnviarVacio" class="boton borde">Enviar sin audio</button>
-        </div>
-      </div>
-    </section>
-  </main>
+  <p id="estado" class="estado">Listo para grabar</p>
+  <audio id="reproductor" controls hidden></audio>
 
-  <script>
-    // 1. Datos que Django escribe en la página
-    const csrf = '{{ csrf_token }}';
-    const urlSubir = '{% url "triage:subir_audio" %}';
+  <!-- Pruebas de T016 -->
+  <div class="prueba">
+    <h3>Probar con un archivo</h3>
+    <input type="file" id="archivo">
+    <div class="botones">
+      <button id="btnEnviarArchivo" class="boton borde">Enviar archivo</button>
+      <button id="btnEnviarVacio" class="boton borde">Enviar sin audio</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
 
-    const btnGrabar = document.getElementById('btnGrabar');
-    const btnDetener = document.getElementById('btnDetener');
-    const estado = document.getElementById('estado');
-    const reproductor = document.getElementById('reproductor');
+{% block scripts %}
+<script>
+  // 1. Datos que Django escribe en la página
+  const csrf = '{{ csrf_token }}';
+  const urlSubir = '{% url "triage:subir_audio" %}';
 
-    // 2. Mostrar un mensaje en verde (ok) o en rojo (error)
-    function mostrar(texto, ok) {
-      estado.textContent = texto;
-      estado.className = 'estado ' + (ok ? 'ok' : 'error');
+  const btnGrabar = document.getElementById('btnGrabar');
+  const btnDetener = document.getElementById('btnDetener');
+  const estado = document.getElementById('estado');
+  const reproductor = document.getElementById('reproductor');
+
+  // 2. Mostrar un mensaje en verde (ok) o en rojo (error)
+  function mostrar(texto, ok) {
+    estado.textContent = texto;
+    estado.className = 'estado ' + (ok ? 'ok' : 'error');
+  }
+
+  // 3. Enviar el audio al servidor (vista subir_audio)
+  async function enviar(datos) {
+    mostrar('Enviando...', true);
+    try {
+      const respuesta = await fetch(urlSubir, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrf },
+        body: datos
+      });
+      const json = await respuesta.json();
+      if (json.ok) mostrar('Guardado: ' + json.ruta, true);
+      else mostrar('Error: ' + json.error, false);
+    } catch (e) {
+      mostrar('Error: no se pudo conectar con el servidor.', false);
     }
+  }
 
-    // 3. Enviar el audio al servidor (vista subir_audio)
-    async function enviar(datos) {
-      mostrar('Enviando...', true);
-      try {
-        const respuesta = await fetch(urlSubir, {
-          method: 'POST',
-          headers: { 'X-CSRFToken': csrf },
-          body: datos
-        });
-        const json = await respuesta.json();
-        if (json.ok) mostrar('Guardado: ' + json.ruta, true);
-        else mostrar('Error: ' + json.error, false);
-      } catch (e) {
-        mostrar('Error: no se pudo conectar con el servidor.', false);
-      }
+  // 4. Grabar con el micrófono
+  let grabadora;
+  let partes = [];
+
+  btnGrabar.onclick = async () => {
+    try {
+      const microfono = await navigator.mediaDevices.getUserMedia({ audio: true });
+      grabadora = new MediaRecorder(microfono);
+      partes = [];
+      grabadora.ondataavailable = e => partes.push(e.data);
+      grabadora.onstop = () => {
+        const blob = new Blob(partes, { type: 'audio/webm' });
+        reproductor.src = URL.createObjectURL(blob);
+        reproductor.hidden = false;
+        const datos = new FormData();
+        datos.append('audio', blob, 'grabacion.webm');
+        enviar(datos);
+        microfono.getTracks().forEach(pista => pista.stop());
+      };
+      grabadora.start();
+      mostrar('Grabando...', true);
+      btnGrabar.disabled = true;
+      btnDetener.disabled = false;
+    } catch (e) {
+      mostrar('Error: no se dio permiso para usar el micrófono.', false);
     }
+  };
 
-    // 4. Grabar con el micrófono
-    let grabadora;
-    let partes = [];
+  btnDetener.onclick = () => {
+    grabadora.stop();
+    btnGrabar.disabled = false;
+    btnDetener.disabled = true;
+  };
 
-    btnGrabar.onclick = async () => {
-      try {
-        const microfono = await navigator.mediaDevices.getUserMedia({ audio: true });
-        grabadora = new MediaRecorder(microfono);
-        partes = [];
-        grabadora.ondataavailable = e => partes.push(e.data);
-        grabadora.onstop = () => {
-          const blob = new Blob(partes, { type: 'audio/webm' });
-          reproductor.src = URL.createObjectURL(blob);
-          reproductor.hidden = false;
-          const datos = new FormData();
-          datos.append('audio', blob, 'grabacion.webm');
-          enviar(datos);
-          microfono.getTracks().forEach(pista => pista.stop());
-        };
-        grabadora.start();
-        mostrar('Grabando...', true);
-        btnGrabar.disabled = true;
-        btnDetener.disabled = false;
-      } catch (e) {
-        mostrar('Error: no se dio permiso para usar el micrófono.', false);
-      }
-    };
+  // 5. Prueba: enviar el archivo elegido (sirve para probar "Formato no permitido")
+  document.getElementById('btnEnviarArchivo').onclick = () => {
+    const archivo = document.getElementById('archivo').files[0];
+    const datos = new FormData();
+    if (archivo) datos.append('audio', archivo);
+    enviar(datos);
+  };
 
-    btnDetener.onclick = () => {
-      grabadora.stop();
-      btnGrabar.disabled = false;
-      btnDetener.disabled = true;
-    };
-
-    // 5. Prueba: enviar un archivo elegido (sirve para probar "Formato no permitido")
-    document.getElementById('btnEnviarArchivo').onclick = () => {
-      const archivo = document.getElementById('archivo').files[0];
-      const datos = new FormData();
-      if (archivo) datos.append('audio', archivo);
-      enviar(datos);
-    };
-
-    // 6. Prueba: enviar sin audio (debe responder "No se recibió audio")
-    document.getElementById('btnEnviarVacio').onclick = () => {
-      enviar(new FormData());
-    };
-  </script>
-</body>
-</html>
+  // 6. Prueba: enviar sin audio (debe responder "No se recibió audio")
+  document.getElementById('btnEnviarVacio').onclick = () => {
+    enviar(new FormData());
+  };
+</script>
+{% endblock %}

@@ -1,4 +1,10 @@
 // =========================================================
+// Este archivo se carga en TODAS las páginas (desde base.html).
+// Por eso, antes de usar un elemento, revisamos que exista
+// en la página con:  if (elemento) { ... }
+// =========================================================
+
+// =========================================================
 // 1. MOSTRAR / OCULTAR EL MENÚ LATERAL (botón ☰)
 // =========================================================
 const contenedor = document.getElementById('contenedor');
@@ -7,23 +13,27 @@ document.getElementById('btnMenu').addEventListener('click', () => {
 });
 
 // =========================================================
-// 2. FECHA Y HORA ACTUALES EN EL BANNER
+// 2. FECHA Y HORA ACTUALES EN EL BANNER (solo en el panel)
 // =========================================================
-const ahora = new Date();
-document.getElementById('fecha').textContent =
-  ahora.toLocaleDateString('es-SV', { day: 'numeric', month: 'long', year: 'numeric' });
-document.getElementById('hora').textContent =
-  ahora.toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit' });
+const fecha = document.getElementById('fecha');
+const hora = document.getElementById('hora');
+if (fecha && hora) {
+  const ahora = new Date();
+  fecha.textContent = ahora.toLocaleDateString('es-SV', { day: 'numeric', month: 'long', year: 'numeric' });
+  hora.textContent = ahora.toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit' });
+}
 
 // =========================================================
-// 3. MARCAR LA OPCIÓN DEL MENÚ QUE SE HIZO CLIC
+// 3. OPCIONES DEL MENÚ QUE TODAVÍA NO TIENEN PÁGINA (href="#")
+//    Las que sí tienen página (Inicio, Grabación de Audio)
+//    abren su página normal y Django marca la opción activa.
 // =========================================================
-const opcionesMenu = document.querySelectorAll('.menu a');
-opcionesMenu.forEach(opcion => {
+document.querySelectorAll('.menu a').forEach(opcion => {
   opcion.addEventListener('click', evento => {
-    evento.preventDefault();                                   // no recarga la página (href="#")
-    opcionesMenu.forEach(o => o.classList.remove('activo'));   // quita el azul de todas
-    opcion.classList.add('activo');                            // lo pone en la que se hizo clic
+    if (opcion.getAttribute('href') === '#') {
+      evento.preventDefault();                    // no hace nada todavía
+      mostrarAviso('Página en construcción: ' + opcion.textContent.trim());
+    }
   });
 });
 
@@ -53,17 +63,25 @@ document.addEventListener('click', () => {
 });
 
 // =========================================================
-// 6. BOTONES DE ACCIONES RÁPIDAS Y "VER TODOS"
+// 6. BOTONES DE ACCIONES RÁPIDAS Y "VER TODOS" (solo en el panel)
+//    Si el botón tiene data-url, abre esa página.
 // =========================================================
 document.querySelectorAll('.btn-accion').forEach(boton => {
   boton.addEventListener('click', () => {
-    mostrarAviso('Abriendo: ' + boton.dataset.accion);
+    if (boton.dataset.url) {
+      window.location.href = boton.dataset.url;
+    } else {
+      mostrarAviso('Abriendo: ' + boton.dataset.accion);
+    }
   });
 });
 
-document.getElementById('btnVerTodos').addEventListener('click', () => {
-  mostrarAviso('Abriendo la lista completa de pacientes');
-});
+const btnVerTodos = document.getElementById('btnVerTodos');
+if (btnVerTodos) {
+  btnVerTodos.addEventListener('click', () => {
+    mostrarAviso('Abriendo la lista completa de pacientes');
+  });
+}
 
 // =========================================================
 // 7. FUNCIÓN QUE MUESTRA EL AVISO ABAJO A LA DERECHA

@@ -61,8 +61,9 @@ Abre **http://127.0.0.1:8000/** en el navegador. Debe aparecer el panel del admi
 │   ├── views.py             inicio, pagina_audio, subir_audio
 │   ├── urls.py              Rutas de la app
 │   ├── templates/triage/
-│   │   ├── index.html       Panel del administrador
-│   │   └── audio.html       Página de grabación (botones Grabar y Detener)
+│   │   ├── base.html        Diseño común: menú lateral, barra superior y pie
+│   │   ├── index.html       Panel del administrador (usa base.html)
+│   │   └── audio.html       Página de grabación (usa base.html)
 │   └── static/triage/
 │       ├── style.css        Diseño del panel
 │       └── script.js        Botones del panel (menú, campana, usuario, acciones)

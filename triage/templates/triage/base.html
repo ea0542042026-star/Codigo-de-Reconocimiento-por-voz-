@@ -1,0 +1,121 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TriageVoz | {% block titulo %}Panel de Administrador{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Enlace al archivo de estilos (style.css) -->
+  <link rel="stylesheet" href="{% static 'triage/style.css' %}?v=2">
+
+  <!-- Aquí cada página puede agregar sus propios estilos -->
+  {% block estilos %}{% endblock %}
+</head>
+<body>
+
+  <!-- =========================================================
+       ÍCONOS (se definen una vez y se usan con <use href="#...">)
+       ========================================================= -->
+  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-inicio" viewBox="0 0 24 24"><path d="M12 3 2 12h3v8h5v-6h4v6h5v-8h3z"/></symbol>
+    <symbol id="i-pacientes" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M1 20c0-4 4-6 8-6s8 2 8 6z"/><circle cx="17.5" cy="7" r="3"/><path d="M18 12.5c3 .2 5 2.2 5 5.5h-4.2c0-2.2-.4-4-.8-5.5z"/></symbol>
+    <symbol id="i-micro" viewBox="0 0 24 24"><rect x="8.5" y="2" width="7" height="12" rx="3.5"/><path d="M5 11a7 7 0 0 0 14 0" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 18h2v4h-2z"/></symbol>
+    <symbol id="i-archivo" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M5 2h9l5 5v15H5zM8 11h8v2H8zm0 4h8v2H8z"/></symbol>
+    <symbol id="i-nlp" viewBox="0 0 24 24"><path d="M6 6 12 18 18 6z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="6" cy="6" r="3.2"/><circle cx="18" cy="6" r="3.2"/><circle cx="12" cy="18" r="3.2"/></symbol>
+    <symbol id="i-triage" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2 4 5v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V5zM11 8h2v3h3v2h-3v3h-2v-3H8v-2h3z"/></symbol>
+    <symbol id="i-historial" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1 4.5h2v5h4v2h-6z"/></symbol>
+    <symbol id="i-reportes" viewBox="0 0 24 24"><path d="M2 20h20v2H2zM4 12h4v7H4zm6-6h4v13h-4zm6 3h4v10h-4z"/></symbol>
+    <symbol id="i-usuarios" viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.5"/><circle cx="16" cy="8" r="3.5"/><path d="M0 20c0-3.5 3.5-5.5 8-5.5 1.5 0 2.8.2 4 .7 1.2-.5 2.5-.7 4-.7 4.5 0 8 2 8 5.5z"/></symbol>
+    <symbol id="i-config" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="3.4 3.27"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="3.5"/></symbol>
+    <symbol id="i-barras" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-campana" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-6 6v4.5L4 17h16l-2-3.5V9a6 6 0 0 0-6-6zM10 20a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-avatar" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 1a11 11 0 1 0 0 22 11 11 0 0 0 0-22zm0 4.5a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM5.5 18.5c1.3-2 3.7-3.3 6.5-3.3s5.2 1.3 6.5 3.3A9 9 0 0 1 12 21a9 9 0 0 1-6.5-2.5z"/></symbol>
+    <symbol id="i-flecha-abajo" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.5"/></symbol>
+    <symbol id="i-flecha-der" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.5"/></symbol>
+    <symbol id="i-calendario" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 2v5M16 2v5" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-alerta" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2 1 21h22zM11 9h2v6h-2zm0 8h2v2h-2z"/></symbol>
+    <symbol id="i-ojo" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7zm0 3.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7z"/></symbol>
+    <symbol id="i-salir" viewBox="0 0 24 24"><path d="M10 4H5v16h5M15 8l4 4-4 4M9 12h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </svg>
+
+  <div class="contenedor" id="contenedor">
+
+    <!-- ================= MENÚ LATERAL ================= -->
+    <aside class="sidebar">
+      <div class="logo">Triage<span>Voz</span></div>
+      <ul class="menu">
+        {% with pagina=request.resolver_match.url_name %}
+        <li><a href="{% url 'triage:inicio' %}" class="{% if pagina == 'inicio' %}activo{% endif %}"><svg class="icono"><use href="#i-inicio"/></svg> Inicio</a></li>
+        <li><a href="#"><svg class="icono"><use href="#i-pacientes"/></svg> Pacientes</a></li>
+        <li><a href="{% url 'triage:pagina_audio' %}" class="{% if pagina == 'pagina_audio' %}activo{% endif %}"><svg class="icono"><use href="#i-micro"/></svg> Grabación de Audio</a></li>
+        <li><a href="#"><svg class="icono"><use href="#i-archivo"/></svg> Transcripción</a></li>
+        <li><a href="#"><svg class="icono"><use href="#i-nlp"/></svg> Análisis NLP</a></li>
+        <li><a href="#"><svg class="icono"><use href="#i-triage"/></svg> Triage</a></li>
+        <li><a href="#"><svg class="icono"><use href="#i-historial"/></svg> Historial</a></li>
+        <li><a href="#"><svg class="icono"><use href="#i-reportes"/></svg> Reportes</a></li>
+        <li><a href="#"><svg class="icono"><use href="#i-usuarios"/></svg> Usuarios</a></li>
+        <li><a href="#"><svg class="icono"><use href="#i-config"/></svg> Configuración</a></li>
+        {% endwith %}
+      </ul>
+    </aside>
+
+    <main class="principal">
+
+      <!-- ================= BARRA SUPERIOR ================= -->
+      <header class="topbar">
+        <button class="btn-icono" id="btnMenu" aria-label="Mostrar u ocultar menú">
+          <svg class="icono"><use href="#i-barras"/></svg>
+        </button>
+
+        <div class="topbar-derecha">
+          <!-- Botón de la campana -->
+          <button class="btn-icono notificacion" id="btnCampana" aria-label="Notificaciones">
+            <svg class="icono"><use href="#i-campana"/></svg>
+            <span class="punto" id="puntoRojo"></span>
+          </button>
+
+          <!-- Botón del usuario con su menú desplegable -->
+          <div class="usuario-caja">
+            <button class="btn-usuario" id="btnUsuario" aria-label="Menú del usuario">
+              <svg class="avatar"><use href="#i-avatar"/></svg>
+              <span class="usuario-texto">
+                <strong>Administrador</strong>
+                <small>Administrador del sistema</small>
+              </span>
+              <svg class="icono flecha"><use href="#i-flecha-abajo"/></svg>
+            </button>
+            <div class="menu-usuario" id="menuUsuario">
+              <a href="#"><svg class="icono"><use href="#i-avatar"/></svg> Mi perfil</a>
+              <a href="#"><svg class="icono"><use href="#i-config"/></svg> Configuración</a>
+              <a href="#" class="salir"><svg class="icono"><use href="#i-salir"/></svg> Cerrar sesión</a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="contenido">
+        <!-- Aquí va el contenido de cada página -->
+        {% block contenido %}{% endblock %}
+      </section>
+
+      <!-- ================= PIE DE PÁGINA ================= -->
+      <footer class="pie">
+        <strong>TriageVoz</strong> | Sistema de Reconocimiento de Voz para Triage
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Mensaje que aparece al hacer clic en una acción -->
+  <div class="aviso" id="aviso"></div>
+
+  <!-- Enlace al archivo de JavaScript -->
+  <script src="{% static 'triage/script.js' %}?v=2"></script>
+
+  <!-- Aquí cada página puede agregar su propio JavaScript -->
+  {% block scripts %}{% endblock %}
+
+</body>
+</html>
