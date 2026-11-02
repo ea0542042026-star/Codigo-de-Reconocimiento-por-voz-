@@ -8,13 +8,13 @@ El sistema graba o recibe audio, lo convierte a texto con **Whisper**, extrae s�
 
 ---
 
-## 1. Estado actual (26 de octubre de 2026)
+## 1. Estado actual (2 de noviembre de 2026)
 
 | Semana | Tareas | Estado |
 |---|---|---|
 | 1 | T001–T006: repositorio, ramas y Django | ✅ Django funcionando |
 | 2 | T007–T011: estructura y rutas | ✅ Rutas `/`, `/audio/`, `/audio/subir/` |
-| 3 | T012–T016: módulo de audio | 🟡 Vista que recibe audio lista; falta la página de grabación (`audio.html`) y el módulo del integrante 2 |
+| 3 | T012–T016: módulo de audio | ✅ Página `/audio/` graba con el micrófono y guarda en `media/audios/` · 🟡 Falta el módulo del integrante 2 (T015) |
 | 4 | T017–T021: Whisper | ⏳ Pendiente |
 
 ---
@@ -61,7 +61,8 @@ Abre **http://127.0.0.1:8000/** en el navegador. Debe aparecer el panel del admi
 │   ├── views.py             inicio, pagina_audio, subir_audio
 │   ├── urls.py              Rutas de la app
 │   ├── templates/triage/
-│   │   └── index.html       Panel del administrador
+│   │   ├── index.html       Panel del administrador
+│   │   └── audio.html       Página de grabación (botones Grabar y Detener)
 │   └── static/triage/
 │       ├── style.css        Diseño del panel
 │       └── script.js        Botones del panel (menú, campana, usuario, acciones)
@@ -77,7 +78,7 @@ Abre **http://127.0.0.1:8000/** en el navegador. Debe aparecer el panel del admi
 | Ruta | Vista | Qué hace |
 |---|---|---|
 | `/` | `inicio` | Muestra el panel del administrador |
-| `/audio/` | `pagina_audio` | Página para grabar audio *(la plantilla `audio.html` está pendiente, T016)* |
+| `/audio/` | `pagina_audio` | Página para grabar audio con el micrófono y enviarlo al servidor |
 | `/audio/subir/` | `subir_audio` | Recibe el audio por **POST**, revisa formato (wav, mp3, webm, m4a, ogg) y tamaño (máx. 25 MB) y lo guarda en `media/audios/` |
 | `/admin/` | Admin de Django | Panel de administración (requiere `python manage.py createsuperuser`) |
 
