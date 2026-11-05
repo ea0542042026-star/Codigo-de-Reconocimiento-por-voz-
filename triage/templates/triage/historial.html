@@ -1,0 +1,53 @@
+{% extends 'triage/base.html' %}
+
+{% block titulo %}Historial{% endblock %}
+
+{% block contenido %}
+<div class="panel">
+  <div class="panel-titulo">
+    <h2>Historial de triage</h2>
+    <a class="boton" href="{% url 'triage:registro_nuevo' %}">Nuevo registro</a>
+  </div>
+
+  <!-- Buscador: usa GET para que la búsqueda quede en la dirección -->
+  <form method="get" class="buscador">
+    <input type="text" name="q" value="{{ buscar }}" placeholder="Buscar por nombre, apellido o motivo">
+    <select name="prioridad">
+      <option value="">Todas las prioridades</option>
+      {% for valor, texto in prioridades %}
+        <option value="{{ valor }}" {% if valor == prioridad %}selected{% endif %}>{{ texto }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="boton">Buscar</button>
+  </form>
+
+  {% if registros %}
+    <div class="tabla-caja">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Paciente</th>
+            <th>Edad</th>
+            <th>Motivo</th>
+            <th>Prioridad</th>
+            <th>Fecha y hora</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in registros %}
+            <tr>
+              <td>{{ r.paciente }}</td>
+              <td>{{ r.paciente.edad }}</td>
+              <td>{{ r.motivo|truncatechars:40 }}</td>
+              <td><span class="etiqueta prioridad-{{ r.prioridad }}">{{ r.get_prioridad_display }}</span></td>
+              <td>{{ r.fecha|date:"d/m/Y H:i" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="vacio">Todavía no hay registros. Presiona "Nuevo registro" para agregar el primero.</p>
+  {% endif %}
+</div>
+{% endblock %}

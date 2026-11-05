@@ -1,0 +1,39 @@
+{% extends 'triage/base.html' %}
+
+{% block titulo %}Registro de Triage{% endblock %}
+
+{% block contenido %}
+<div class="panel">
+  <div class="panel-titulo"><h2>Nuevo registro de triage</h2></div>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <!-- 1. Datos del paciente -->
+    <p class="subtitulo">Datos del paciente</p>
+    <div class="formulario">
+      {% for campo in form_paciente %}
+        <div class="campo">
+          <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+          {{ campo }}
+          {% for error in campo.errors %}<span class="error">{{ error }}</span>{% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- 2. Evaluación -->
+    <p class="subtitulo">Evaluación</p>
+    <div class="formulario">
+      {% for campo in form_registro %}
+        <div class="campo{% if campo.name == 'motivo' or campo.name == 'transcripcion' %} ancho{% endif %}">
+          <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+          {{ campo }}
+          {% for error in campo.errors %}<span class="error">{{ error }}</span>{% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <button type="submit" class="boton verde">Guardar registro</button>
+  </form>
+</div>
+{% endblock %}

@@ -451,3 +451,32 @@ button:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
   .bienvenida { flex-wrap: wrap; }
   .bienvenida-derecha { min-width: 0; }
 }
+/* MENSAJES DE AVISO (guardado, error) */
+.mensaje { padding: 10px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+.mensaje.success { background: #dcf3ea; color: #0b6b51; }
+.mensaje.error { background: #fde2e1; color: #c62828; }
+
+/* FORMULARIOS (registro de triage) */
+.formulario { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 16px; margin: 12px 0 18px; }
+.campo { display: flex; flex-direction: column; gap: 4px; }
+.campo.ancho { grid-column: 1 / -1; }
+.campo label { font-size: 12px; font-weight: 600; color: var(--texto-suave); }
+.campo input, .campo select, .campo textarea {
+  font: inherit; font-size: 13px; padding: 8px 10px;
+  border: 1px solid var(--borde); border-radius: 6px; background: var(--blanco); color: var(--texto);
+}
+.campo input:focus, .campo select:focus, .campo textarea:focus { outline: 2px solid var(--azul-claro); border-color: var(--azul); }
+.campo .error { font-size: 12px; color: var(--rojo); }
+.subtitulo { font-size: 13px; font-weight: 700; color: var(--azul); margin-top: 6px; }
+
+/* PRIORIDADES DE TRIAGE */
+.prioridad-ROJO { background: #fde2e1; color: #c62828; }
+.prioridad-AMARILLO { background: #fef6c7; color: #92700c; }
+.prioridad-VERDE { background: #dcf3ea; color: #0b6b51; }
+
+/* BUSCADOR DEL HISTORIAL */
+.buscador { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 14px; }
+.buscador input, .buscador select { font: inherit; font-size: 13px; padding: 8px 10px; border: 1px solid var(--borde); border-radius: 6px; }
+.buscador input { flex: 1; min-width: 180px; }
+.vacio { font-size: 13px; color: var(--texto-suave); padding: 14px 0; }
+.boton { text-decoration: none; }
