@@ -8,6 +8,13 @@
 
   <form method="post">
     {% csrf_token %}
+    <input type="hidden" name="audio_ruta" value="{{ audio_ruta }}">
+
+    {% if audio_ruta %}
+      <!-- Audio que viene de la página de grabación -->
+      <p class="subtitulo">Audio grabado</p>
+      <audio controls src="{{ MEDIA_URL }}{{ audio_ruta }}" style="width:100%;margin:8px 0 12px"></audio>
+    {% endif %}
 
     <!-- 1. Datos del paciente -->
     <p class="subtitulo">Datos del paciente</p>

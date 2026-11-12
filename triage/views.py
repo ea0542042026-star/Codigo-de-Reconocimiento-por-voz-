@@ -1,5 +1,6 @@
 import os
 
+from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib import messages
@@ -9,6 +10,8 @@ from django.core.files.storage import default_storage
 
 from .forms import PacienteForm, RegistroTriageForm
 from .models import RegistroTriage
+from .services.transcriptor_whisper import TranscriptorWhisper
+from .services.servicio_transcripcion import ServicioTranscripcion, TranscripcionError
 
 # Reglas del audio (T012)
 EXT_PERMITIDAS = {'.wav', '.mp3', '.webm', '.m4a', '.ogg'}
@@ -48,6 +51,28 @@ def subir_audio(request):
     return JsonResponse({'ok': True, 'ruta': ruta})
 
 
+def ruta_audio_valida(ruta):
+    """Solo acepta audios dentro de media/audios (evita que pidan otros archivos)."""
+    return ruta.startswith('audios/') and '..' not in ruta and '\\' not in ruta
+
+
+@require_POST
+def transcribir_audio(request):
+    """Recibe la ruta de un audio ya guardado y devuelve el texto con Whisper."""
+    ruta = request.POST.get('ruta', '')
+    if not ruta_audio_valida(ruta):
+        return JsonResponse({'ok': False, 'error': 'Ruta de audio no válida'}, status=400)
+
+    ruta_completa = os.path.join(settings.MEDIA_ROOT, ruta)
+    servicio = ServicioTranscripcion(TranscriptorWhisper('base'))
+    try:
+        texto = servicio.transcribir_audio(ruta_completa)
+    except TranscripcionError as error:
+        return JsonResponse({'ok': False, 'error': str(error)}, status=500)
+
+    return JsonResponse({'ok': True, 'texto': texto})
+
+
 def registro_nuevo(request):
     """Muestra el formulario de triage y guarda el paciente y su evaluación."""
     if request.method == 'POST':
@@ -57,17 +82,28 @@ def registro_nuevo(request):
             paciente = form_paciente.save()
             registro = form_registro.save(commit=False)
             registro.paciente = paciente
+            audio_ruta = request.POST.get('audio_ruta', '')
+            if audio_ruta and ruta_audio_valida(audio_ruta):
+                registro.audio.name = audio_ruta   # une el audio grabado con este registro
             registro.save()
             messages.success(request, f'Registro de {paciente} guardado con éxito.')
             return redirect('triage:historial')
         messages.error(request, 'Revisa los datos marcados en rojo.')
+        audio_ruta = request.POST.get('audio_ruta', '')
     else:
+        # Si viene de la página de audio, llega el texto de Whisper y la ruta del audio
         form_paciente = PacienteForm()
-        form_registro = RegistroTriageForm()
+        form_registro = RegistroTriageForm(initial={'transcripcion': request.GET.get('texto', '')})
+        audio_ruta = request.GET.get('audio', '')
+
+    if not ruta_audio_valida(audio_ruta):
+        audio_ruta = ''
 
     return render(request, 'triage/registro.html', {
         'form_paciente': form_paciente,
         'form_registro': form_registro,
+        'audio_ruta': audio_ruta,
+        'MEDIA_URL': settings.MEDIA_URL,
     })
 
 

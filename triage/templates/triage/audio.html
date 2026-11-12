@@ -14,6 +14,9 @@
   .prueba { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5e7eb; }
   .prueba h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
   audio { width: 100%; margin-top: 12px; }
+  .transcripcion { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
+  .transcripcion h3 { font-size: 14px; font-weight: 600; }
+  .transcripcion textarea { font: inherit; font-size: 14px; padding: 10px; border: 1px solid #dbe4ef; border-radius: 6px; min-height: 90px; }
 </style>
 {% endblock %}
 
@@ -29,6 +32,15 @@
 
   <p id="estado" class="estado">Listo para grabar</p>
   <audio id="reproductor" controls hidden></audio>
+
+  <!-- Texto que devuelve Whisper (aparece después de grabar) -->
+  <div id="cajaTexto" class="transcripcion" hidden>
+    <h3>Texto transcrito por Whisper</h3>
+    <textarea id="texto" aria-label="Texto transcrito"></textarea>
+    <div class="botones">
+      <a id="btnUsar" class="boton verde" href="#">Usar en un registro de triage</a>
+    </div>
+  </div>
 
   <!-- Pruebas de T016 -->
   <div class="prueba">
@@ -47,6 +59,8 @@
   // 1. Datos que Django escribe en la página
   const csrf = '{{ csrf_token }}';
   const urlSubir = '{% url "triage:subir_audio" %}';
+  const urlTranscribir = '{% url "triage:transcribir_audio" %}';
+  const urlRegistro = '{% url "triage:registro_nuevo" %}';
 
   const btnGrabar = document.getElementById('btnGrabar');
   const btnDetener = document.getElementById('btnDetener');
@@ -69,12 +83,54 @@
         body: datos
       });
       const json = await respuesta.json();
-      if (json.ok) mostrar('Guardado: ' + json.ruta, true);
-      else mostrar('Error: ' + json.error, false);
+      if (json.ok) {
+        mostrar('Guardado: ' + json.ruta, true);
+        transcribir(json.ruta);              // 3.1 después de guardar, pedir el texto
+      } else {
+        mostrar('Error: ' + json.error, false);
+      }
     } catch (e) {
       mostrar('Error: no se pudo conectar con el servidor.', false);
     }
   }
+
+  // 3.1 Pedir a Django que Whisper convierta el audio en texto
+  const cajaTexto = document.getElementById('cajaTexto');
+  const texto = document.getElementById('texto');
+  const btnUsar = document.getElementById('btnUsar');
+  let rutaAudio = '';
+
+  async function transcribir(ruta) {
+    rutaAudio = ruta;
+    mostrar('Transcribiendo con Whisper... (la primera vez tarda más)', true);
+    const datos = new FormData();
+    datos.append('ruta', ruta);
+    try {
+      const respuesta = await fetch(urlTranscribir, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrf },
+        body: datos
+      });
+      const json = await respuesta.json();
+      if (json.ok) {
+        texto.value = json.texto;
+        cajaTexto.hidden = false;
+        mostrar('Listo: revisa el texto y corrígelo si hace falta.', true);
+      } else {
+        mostrar('Error: ' + json.error, false);
+      }
+    } catch (e) {
+      mostrar('Error: no se pudo conectar con el servidor.', false);
+    }
+  }
+
+  // 3.2 Llevar el texto y el audio al formulario de registro
+  btnUsar.onclick = (evento) => {
+    evento.preventDefault();
+    const direccion = urlRegistro + '?texto=' + encodeURIComponent(texto.value)
+                    + '&audio=' + encodeURIComponent(rutaAudio);
+    window.location.href = direccion;
+  };
 
   // 4. Grabar con el micrófono
   let grabadora;

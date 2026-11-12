@@ -34,8 +34,10 @@ py -m venv venv
 # Si sale un error de "ejecución de scripts", corre una sola vez:
 #   Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
-# 3. Instalar las librerías
+# 3. Instalar las librerías (Whisper es pesado: tarda varios minutos)
 python -m pip install -r requirements.txt
+# Whisper necesita FFmpeg para leer el audio:
+#   winget install ffmpeg   (luego cerrar y abrir VS Code)
 
 # 4. Crear la base de datos y la carpeta de audios
 python manage.py migrate
@@ -80,6 +82,9 @@ Abre **http://127.0.0.1:8000/** en el navegador. Debe aparecer el panel del admi
 |---|---|---|
 | `/` | `inicio` | Muestra el panel del administrador |
 | `/audio/` | `pagina_audio` | Página para grabar audio con el micrófono y enviarlo al servidor |
+| `/audio/transcribir/` | `transcribir_audio` | Recibe la ruta de un audio guardado y devuelve el texto con **Whisper** |
+| `/registro/nuevo/` | `registro_nuevo` | Formulario de triage (se llena con el texto de Whisper) |
+| `/historial/` | `historial` | Lista de registros con buscador y filtro por prioridad |
 | `/audio/subir/` | `subir_audio` | Recibe el audio por **POST**, revisa formato (wav, mp3, webm, m4a, ogg) y tamaño (máx. 25 MB) y lo guarda en `media/audios/` |
 | `/admin/` | Admin de Django | Panel de administración (requiere `python manage.py createsuperuser`) |
 

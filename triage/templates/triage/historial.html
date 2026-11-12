@@ -30,6 +30,7 @@
             <th>Edad</th>
             <th>Motivo</th>
             <th>Prioridad</th>
+            <th>Audio</th>
             <th>Fecha y hora</th>
           </tr>
         </thead>
@@ -40,6 +41,7 @@
               <td>{{ r.paciente.edad }}</td>
               <td>{{ r.motivo|truncatechars:40 }}</td>
               <td><span class="etiqueta prioridad-{{ r.prioridad }}">{{ r.get_prioridad_display }}</span></td>
+              <td>{% if r.audio %}<a href="{{ r.audio.url }}" target="_blank">Escuchar</a>{% else %}-{% endif %}</td>
               <td>{{ r.fecha|date:"d/m/Y H:i" }}</td>
             </tr>
           {% endfor %}
