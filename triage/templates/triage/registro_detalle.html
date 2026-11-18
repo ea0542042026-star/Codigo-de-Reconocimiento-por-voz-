@@ -1,0 +1,78 @@
+{% extends 'triage/base.html' %}
+
+{% block titulo %}Triage de {{ registro.paciente }}{% endblock %}
+
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <p class="migas"><a href="{% url 'triage:historial' %}">Historial</a> / Triage #{{ registro.pk }}</p>
+    <h1>Triage de <a href="{% url 'triage:paciente_detalle' registro.paciente.pk %}" style="text-decoration:none;color:var(--principal)">{{ registro.paciente }}</a></h1>
+    <p>{{ registro.fecha|date:"d/m/Y H:i" }} · {{ registro.paciente.edad }} años · {{ registro.paciente.get_sexo_display }}</p>
+  </div>
+</div>
+
+<!-- ============ PRIORIDAD Y ESTADO ============ -->
+<div class="banda-prioridad p-{{ registro.prioridad }}">
+  <div>
+    <small>Prioridad asignada</small>
+    <h2><span class="bola bola-{{ registro.prioridad }}"></span> {{ registro.get_prioridad_display }}</h2>
+    {% if registro.prioridad_sugerida and registro.prioridad_sugerida != registro.prioridad %}
+      <small>El sistema sugirió: {{ registro.get_prioridad_sugerida_display }}</small>
+    {% endif %}
+  </div>
+  <!-- Botones para cambiar el estado -->
+  <form method="post" action="{% url 'triage:registro_estado' registro.pk %}" class="botones" style="margin-top:0">
+    {% csrf_token %}
+    {% for clave, nombre in estados %}
+      <button type="submit" name="estado" value="{{ clave }}"
+              class="boton chico {% if registro.estado == clave %}{% else %}gris{% endif %}">
+        {% if registro.estado == clave %}✓ {% endif %}{{ nombre }}
+      </button>
+    {% endfor %}
+  </form>
+</div>
+
+<div class="grid-mitad">
+  <!-- ============ MOTIVO, TEXTO Y AUDIO ============ -->
+  <div class="card">
+    <h2>Motivo de consulta</h2>
+    <div class="texto-caja">{{ registro.motivo|linebreaksbr }}</div>
+
+    {% if registro.transcripcion %}
+      <h2 style="margin-top:20px">Texto dictado (Whisper)</h2>
+      <div class="texto-caja">{{ registro.transcripcion|linebreaksbr }}</div>
+    {% endif %}
+
+    {% if registro.audio %}
+      <h2 style="margin-top:20px">Audio</h2>
+      <audio controls src="{{ registro.audio.url }}"></audio>
+    {% endif %}
+  </div>
+
+  <!-- ============ ANÁLISIS AUTOMÁTICO ============ -->
+  <div class="card">
+    <h2>Análisis automático</h2>
+    <p class="sub">Síntomas encontrados en el texto y razones de la sugerencia</p>
+    <div class="etiquetas" style="margin-top:14px">
+      {% for s in registro.lista_sintomas %}<span class="etiqueta">{{ s }}</span>
+      {% empty %}<span class="sub">No se detectaron síntomas en el texto.</span>{% endfor %}
+    </div>
+    <ul style="margin:14px 0 0 18px;font-size:14px;line-height:1.7">
+      {% for razon in registro.lista_razones %}<li>{{ razon }}</li>{% endfor %}
+    </ul>
+  </div>
+</div>
+
+<!-- ============ SIGNOS VITALES ============ -->
+<div class="card">
+  <h2 style="margin-bottom:14px">Signos vitales</h2>
+  <div class="vitales">
+    <div class="vital"><small>Presión arterial</small><strong>{% if registro.presion_sistolica %}{{ registro.presion_sistolica }}/{{ registro.presion_diastolica|default:"—" }}{% else %}—{% endif %}</strong><span>mmHg</span></div>
+    <div class="vital"><small>Frecuencia cardiaca</small><strong>{{ registro.frecuencia_cardiaca|default:"—" }}</strong><span>latidos por minuto</span></div>
+    <div class="vital"><small>Saturación de oxígeno</small><strong>{{ registro.saturacion|default:"—" }}</strong><span>%</span></div>
+    <div class="vital"><small>Temperatura</small><strong>{{ registro.temperatura|default:"—" }}</strong><span>°C</span></div>
+    <div class="vital"><small>Dolor</small><strong>{{ registro.dolor|default_if_none:"—" }}</strong><span>de 10</span></div>
+    <div class="vital"><small>Estado</small><strong style="font-size:16px;margin-top:8px"><span class="pill estado-{{ registro.estado }}">{{ registro.get_estado_display }}</span></strong></div>
+  </div>
+</div>
+{% endblock %}

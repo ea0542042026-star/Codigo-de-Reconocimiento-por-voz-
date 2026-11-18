@@ -8,14 +8,25 @@ El sistema graba o recibe audio, lo convierte a texto con **Whisper**, extrae s�
 
 ---
 
-## 1. Estado actual (2 de noviembre de 2026)
+## 1. Qué hace el sistema
 
-| Semana | Tareas | Estado |
+| Página | Ruta | Qué hace |
 |---|---|---|
-| 1 | T001–T006: repositorio, ramas y Django | ✅ Django funcionando |
-| 2 | T007–T011: estructura y rutas | ✅ Rutas `/`, `/audio/`, `/audio/subir/` |
-| 3 | T012–T016: módulo de audio | ✅ Página `/audio/` graba con el micrófono y guarda en `media/audios/` · 🟡 Falta el módulo del integrante 2 (T015) |
-| 4 | T017–T021: Whisper | ⏳ Pendiente |
+| Iniciar sesión | `/login/` | Solo entra el personal con usuario y contraseña |
+| Inicio | `/` | Panel con números reales, prioridades de hoy, cola de atención y actividad reciente |
+| Pacientes | `/pacientes/` | Lista con buscador, nuevo, ver, editar y eliminar |
+| Grabación | `/audio/` | Graba con el micrófono (o sube un archivo), lo guarda y lo transcribe con **Whisper** |
+| Triage | `/registro/nuevo/` | Formulario: paciente, motivo, texto dictado y signos vitales. El botón **Analizar** sugiere la prioridad |
+| Detalle | `/registro/<id>/` | Toda la evaluación, el audio, los síntomas detectados y el cambio de estado (En espera, En atención, Atendido) |
+| Historial | `/historial/` | Todas las evaluaciones con buscador, filtros y descarga en CSV (Excel) |
+| Reportes | `/reportes/` | Gráficas de los últimos 7 días, prioridades, estados y síntomas más comunes |
+| Administración | `/admin/` | Panel de Django para manejar usuarios y datos |
+
+### Cómo se decide la prioridad (POO)
+
+- `services/analizador_sintomas.py` → **AnalizadorSintomas**: busca palabras clave en el texto (NLP sencillo) y devuelve los síntomas con su nivel.
+- `services/clasificador_triage.py` → **Regla** (clase abstracta) y sus hijas **ReglaSintomas**, **ReglaSignosVitales** y **ReglaDolor**. **ClasificadorTriage** junta las reglas y elige el color más grave (polimorfismo).
+- `services/transcriptor.py`, `transcriptor_whisper.py` y `servicio_transcripcion.py` → pasan el audio a texto con Whisper.
 
 ---
 
@@ -39,60 +50,45 @@ python -m pip install -r requirements.txt
 # Whisper necesita FFmpeg para leer el audio:
 #   winget install ffmpeg   (luego cerrar y abrir VS Code)
 
-# 4. Crear la base de datos y la carpeta de audios
+# 4. Crear la base de datos, el usuario y datos de ejemplo
 python manage.py migrate
-mkdir media\audios
+python manage.py createsuperuser
+python manage.py datos_demo        # opcional: 10 pacientes ficticios
 
 # 5. Encender el servidor
 python manage.py runserver
 ```
 
-Abre **http://127.0.0.1:8000/** en el navegador. Debe aparecer el panel del administrador.
+Abre **http://127.0.0.1:8000/** e inicia sesión con el usuario que creaste.
 
-> La carpeta `venv/`, la base de datos `db.sqlite3` y la carpeta `media/` **no se suben** a GitHub (están en `.gitignore`). Cada integrante las crea en su computadora con los pasos de arriba.
+Para correr las pruebas automáticas: `python manage.py test triage`
+
+> La carpeta `venv/`, la base de datos `db.sqlite3` y la carpeta `media/` **no se suben** a GitHub (están en `.gitignore`).
 
 ---
 
 ## 3. Estructura del proyecto
 
 ```
-├── config/                  Configuración general del proyecto
-│   ├── settings.py          Apps, base de datos, static y media (MEDIA_URL, MEDIA_ROOT)
-│   └── urls.py              Rutas generales: admin/ e include('triage.urls')
-├── triage/                  App principal del sistema
-│   ├── views.py             inicio, pagina_audio, subir_audio
-│   ├── urls.py              Rutas de la app
-│   ├── templates/triage/
-│   │   ├── base.html        Diseño común: menú lateral, barra superior y pie
-│   │   ├── index.html       Panel del administrador (usa base.html)
-│   │   └── audio.html       Página de grabación (usa base.html)
-│   └── static/triage/
-│       ├── style.css        Diseño del panel
-│       └── script.js        Botones del panel (menú, campana, usuario, acciones)
-├── manage.py                Comandos de Django (runserver, migrate, etc.)
-├── requirements.txt         Librerías necesarias
-└── .gitignore               Archivos que Git no sube
+├── config/                     Configuración general (settings.py, urls.py)
+├── triage/                     App principal
+│   ├── models.py               Paciente y RegistroTriage
+│   ├── forms.py                Formularios con validaciones
+│   ├── views.py                Lógica de cada página
+│   ├── urls.py                 Rutas de la app
+│   ├── admin.py                Panel /admin/
+│   ├── tests.py                16 pruebas automáticas
+│   ├── services/               Clases de POO: Whisper, NLP y clasificador
+│   ├── management/commands/    datos_demo (datos de ejemplo)
+│   ├── templates/triage/       Páginas HTML (base.html es el diseño común)
+│   └── static/triage/          style.css y script.js
+├── manage.py
+└── requirements.txt
 ```
 
 ---
 
-## 4. Rutas disponibles
-
-| Ruta | Vista | Qué hace |
-|---|---|---|
-| `/` | `inicio` | Muestra el panel del administrador |
-| `/audio/` | `pagina_audio` | Página para grabar audio con el micrófono y enviarlo al servidor |
-| `/audio/transcribir/` | `transcribir_audio` | Recibe la ruta de un audio guardado y devuelve el texto con **Whisper** |
-| `/registro/nuevo/` | `registro_nuevo` | Formulario de triage (se llena con el texto de Whisper) |
-| `/historial/` | `historial` | Lista de registros con buscador y filtro por prioridad |
-| `/audio/subir/` | `subir_audio` | Recibe el audio por **POST**, revisa formato (wav, mp3, webm, m4a, ogg) y tamaño (máx. 25 MB) y lo guarda en `media/audios/` |
-| `/admin/` | Admin de Django | Panel de administración (requiere `python manage.py createsuperuser`) |
-
-> Si abres `/audio/subir/` escribiendo la dirección en el navegador sale **HTTP 405**. Es normal: esa ruta solo acepta envíos de audio (POST).
-
----
-
-## 5. Ramas del equipo
+## 4. Ramas del equipo
 
 **Nadie sube directo a `main`.** Cada quien trabaja en su rama y los cambios entran por *pull request* hacia `develop`.
 
@@ -120,14 +116,14 @@ Luego, en GitHub, abre un **Pull request** de tu rama hacia `develop`.
 
 ---
 
-## 6. Equipo
+## 5. Equipo
 
 | Integrante | Rol |
 |---|---|
 | Escobar Acosta Orlando Aldair | Integración (Django, rutas y unión de módulos) |
-| Vásquez Maravilla Josué Daniel | |
-| Arguera Pérez Carlos Antonio | |
-| Xander Orlando Vásquez Ramírez | |
+| Vásquez Maravilla Josué Daniel | Audio |
+| Arguera Pérez Carlos Antonio | Whisper, IA y NLP |
+| Xander Orlando Vásquez Ramírez | Pacientes, modelos e historial |
 | Salgado Alvarenga Nelson Salvador | |
 
 **Tecnologías:** Python 3.10+, Django 6.1.2, SQLite, OpenAI Whisper, Git y GitHub.

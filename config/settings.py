@@ -123,6 +123,12 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
+# Inicio de sesión
+LOGIN_URL = 'login'                     # si no ha iniciado sesión, lo manda aquí
+LOGIN_REDIRECT_URL = 'triage:inicio'    # después de entrar, va al panel
+LOGOUT_REDIRECT_URL = 'login'           # después de salir, regresa al login
+
+
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 

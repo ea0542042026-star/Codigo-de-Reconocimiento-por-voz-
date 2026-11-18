@@ -1,261 +1,113 @@
 {% extends 'triage/base.html' %}
 
-{% block titulo %}Panel de Administrador{% endblock %}
+{% block titulo %}Inicio{% endblock %}
 
 {% block contenido %}
-        <!-- ================= BANNER DE BIENVENIDA ================= -->
-        <div class="bienvenida">
-          <div class="bienvenida-logo">
-            <!-- Estetoscopio -->
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
-              <path d="M5 3H4v6a5 5 0 0 0 10 0V3h-1"/>
-              <path d="M9 14v1.5a5 5 0 0 0 10 0V13"/>
-              <circle cx="19" cy="11" r="2"/>
-            </svg>
-          </div>
+<!-- ================= SALUDO Y FECHA ================= -->
+<div class="encabezado">
+  <div>
+    <h1>Bienvenido, {{ user.first_name|default:user.username }}</h1>
+    <p>Resumen del área de emergencias</p>
+  </div>
+  <div class="fecha-hoy" id="fechaHoy"></div>
+</div>
 
-          <div class="bienvenida-texto">
-            <h1>Bienvenido, Administrador</h1>
-            <p>Panel de control del sistema de Reconocimiento de Voz para Triage.
-               Aquí puedes gestionar pacientes, revisar registros, monitorear el sistema
-               y generar reportes.</p>
-          </div>
+<!-- ================= GRABAR + PRIORIDADES DE HOY ================= -->
+<div class="grid-2">
+  <div class="card grabar">
+    <a class="micro" href="{% url 'triage:pagina_audio' %}" aria-label="Iniciar grabación">
+      <span><svg class="icono"><use href="#i-micro"/></svg></span>
+    </a>
+    <div>
+      <h2>Nuevo triage por voz</h2>
+      <p>Presiona el micrófono y describe los síntomas del paciente. El sistema transcribe el audio y sugiere la prioridad de atención.</p>
+      <div class="pasos"><span>1. Grabar</span><span>2. Transcribir</span><span>3. Clasificar</span></div>
+      <div class="botones">
+        <a class="boton blanco" href="{% url 'triage:pagina_audio' %}">Iniciar grabación</a>
+        <a class="boton" style="background:rgba(255,255,255,.18)" href="{% url 'triage:registro_nuevo' %}">Llenar sin audio</a>
+      </div>
+    </div>
+  </div>
 
-          <div class="bienvenida-derecha">
-            <!-- Línea de latido del corazón -->
-            <svg class="latido" viewBox="0 0 160 40" fill="none" stroke="#1e3a8a" stroke-width="1.5">
-              <polyline points="0,22 25,22 32,15 38,30 45,8 52,32 58,18 64,22 72,22 78,5 85,35 92,12 98,26 104,20 110,22 118,6 124,34 130,22 160,22"/>
-            </svg>
-            <div class="fecha">
-              <svg class="icono"><use href="#i-calendario"/></svg>
-              <div>
-                <span id="fecha">27 de abril de 2025</span>
-                <small id="hora">10:24 a.m.</small>
-              </div>
-            </div>
-          </div>
-        </div>
+  <div class="card">
+    <h2>Prioridades de hoy</h2>
+    <p class="sub">Pacientes evaluados hoy según su urgencia</p>
+    <a class="prioridad-caja p-ROJO" href="{% url 'triage:historial' %}?prioridad=ROJO">
+      <span class="nombre"><span class="bola bola-ROJO"></span>Rojo · Emergencia</span><span class="num">{{ hoy.ROJO }}</span>
+    </a>
+    <a class="prioridad-caja p-AMARILLO" href="{% url 'triage:historial' %}?prioridad=AMARILLO">
+      <span class="nombre"><span class="bola bola-AMARILLO"></span>Amarillo · Urgencia</span><span class="num">{{ hoy.AMARILLO }}</span>
+    </a>
+    <a class="prioridad-caja p-VERDE" href="{% url 'triage:historial' %}?prioridad=VERDE">
+      <span class="nombre"><span class="bola bola-VERDE"></span>Verde · No urgente</span><span class="num">{{ hoy.VERDE }}</span>
+    </a>
+  </div>
+</div>
 
-        <!-- ================= TARJETAS ================= -->
-        <div class="tarjetas">
-          <div class="tarjeta">
-            <div class="cuadro-icono azul"><svg class="icono"><use href="#i-pacientes"/></svg></div>
-            <div>
-              <h3>Total de pacientes</h3>
-              <p class="numero">48</p>
-              <p class="cambio"><span class="sube">↑ +5</span> esta semana</p>
-            </div>
-          </div>
+<!-- ================= NÚMEROS GENERALES ================= -->
+<div class="kpis">
+  <div class="kpi"><p>Total de pacientes</p><strong>{{ total_pacientes }}</strong><small>+{{ pacientes_semana }} esta semana</small></div>
+  <div class="kpi azul"><p>Audios procesados</p><strong>{{ total_audios }}</strong><small>Grabaciones guardadas</small></div>
+  <div class="kpi morado"><p>Transcripciones</p><strong>{{ total_transcripciones }}</strong><small>Textos de Whisper</small></div>
+  <div class="kpi rojo"><p>Alertas rojas activas</p><strong>{{ alertas }}</strong><small>Sin atender todavía</small></div>
+</div>
 
-          <div class="tarjeta">
-            <div class="cuadro-icono verde"><svg class="icono"><use href="#i-micro"/></svg></div>
-            <div>
-              <h3>Audios procesados</h3>
-              <p class="numero">36</p>
-              <p class="cambio"><span class="sube">↑ +8</span> esta semana</p>
-            </div>
-          </div>
+<!-- ================= COLA Y ACTIVIDAD ================= -->
+<div class="grid-2">
+  <div class="card">
+    <div class="titulo-card">
+      <div>
+        <h2>Cola de atención</h2>
+        <p class="sub">Primero los rojos, luego por hora de llegada</p>
+      </div>
+      <a class="link" href="{% url 'triage:historial' %}">Ver historial →</a>
+    </div>
+    <div class="tabla-caja">
+      <table>
+        <thead>
+          <tr><th>Paciente</th><th>Edad</th><th>Hora</th><th>Prioridad</th><th>Estado</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for r in cola %}
+          <tr data-url="{% url 'triage:registro_detalle' r.pk %}">
+            <td><strong>{{ r.paciente }}</strong></td>
+            <td>{{ r.paciente.edad }}</td>
+            <td>{{ r.fecha|date:"H:i" }}</td>
+            <td><span class="pill p-{{ r.prioridad }}">{{ r.get_prioridad_display }}</span></td>
+            <td><span class="pill estado-{{ r.estado }}">{{ r.get_estado_display }}</span></td>
+            <td><a class="boton borde chico" href="{% url 'triage:registro_detalle' r.pk %}">Ver</a></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="vacio">No hay pacientes esperando. 🎉</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-          <div class="tarjeta">
-            <div class="cuadro-icono morado"><svg class="icono"><use href="#i-archivo"/></svg></div>
-            <div>
-              <h3>Transcripciones</h3>
-              <p class="numero">34</p>
-              <p class="cambio"><span class="sube">↑ +7</span> esta semana</p>
-            </div>
-          </div>
-
-          <div class="tarjeta">
-            <div class="cuadro-icono rojo"><svg class="icono"><use href="#i-alerta"/></svg></div>
-            <div>
-              <h3>Alertas de triage</h3>
-              <p class="numero">5</p>
-              <p class="cambio"><span class="alerta">↑ +2</span> esta semana</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- ================= GRÁFICAS ================= -->
-        <div class="fila">
-
-          <!-- Gráfica de líneas -->
-          <div class="panel">
-            <div class="panel-titulo">
-              <h2>Estadísticas generales</h2>
-              <ul class="leyenda">
-                <li><span class="bolita azul"></span> Pacientes</li>
-                <li><span class="bolita verde"></span> Audios</li>
-                <li><span class="bolita morado"></span> Transcripciones</li>
-              </ul>
-            </div>
-
-            <svg class="grafica" viewBox="0 0 520 240">
-              <!-- Fondo y líneas guía -->
-              <rect x="40" y="20" width="460" height="180" class="grafica-fondo"/>
-              <g class="grafica-guias">
-                <line x1="40" y1="20"  x2="500" y2="20"/>
-                <line x1="40" y1="56"  x2="500" y2="56"/>
-                <line x1="40" y1="92"  x2="500" y2="92"/>
-                <line x1="40" y1="128" x2="500" y2="128"/>
-                <line x1="40" y1="164" x2="500" y2="164"/>
-              </g>
-              <!-- Números del eje vertical (0 a 50) -->
-              <g class="grafica-texto">
-                <text x="30" y="24">50</text>
-                <text x="30" y="60">40</text>
-                <text x="30" y="96">30</text>
-                <text x="30" y="132">20</text>
-                <text x="30" y="168">10</text>
-                <text x="30" y="204">0</text>
-              </g>
-              <!-- Días de la semana -->
-              <g class="grafica-texto dias">
-                <text x="60"  y="225">Lun</text>
-                <text x="130" y="225">Mar</text>
-                <text x="200" y="225">Mié</text>
-                <text x="270" y="225">Jue</text>
-                <text x="340" y="225">Vie</text>
-                <text x="410" y="225">Sáb</text>
-                <text x="480" y="225">Dom</text>
-              </g>
-              <!-- Línea de pacientes -->
-              <polyline class="linea azul" points="60,146 130,99 200,117 270,117 340,88 410,60 480,42"/>
-              <!-- Línea de audios -->
-              <polyline class="linea verde" points="60,157 130,128 200,139 270,139 340,114 410,81 480,63"/>
-              <!-- Línea de transcripciones -->
-              <polyline class="linea morado" points="60,171 130,157 200,160 270,160 340,135 410,106 480,81"/>
-              <!-- Puntos de cada día (círculos sobre las líneas) -->
-              <g class="puntos azul">
-                <circle cx="60" cy="146" r="4"/><circle cx="130" cy="99" r="4"/><circle cx="200" cy="117" r="4"/><circle cx="270" cy="117" r="4"/><circle cx="340" cy="88" r="4"/><circle cx="410" cy="60" r="4"/><circle cx="480" cy="42" r="4"/>
-              </g>
-              <g class="puntos verde">
-                <circle cx="60" cy="157" r="4"/><circle cx="130" cy="128" r="4"/><circle cx="200" cy="139" r="4"/><circle cx="270" cy="139" r="4"/><circle cx="340" cy="114" r="4"/><circle cx="410" cy="81" r="4"/><circle cx="480" cy="63" r="4"/>
-              </g>
-              <g class="puntos morado">
-                <circle cx="60" cy="171" r="4"/><circle cx="130" cy="157" r="4"/><circle cx="200" cy="160" r="4"/><circle cx="270" cy="160" r="4"/><circle cx="340" cy="135" r="4"/><circle cx="410" cy="106" r="4"/><circle cx="480" cy="81" r="4"/>
-              </g>
-            </svg>
-          </div>
-
-          <!-- Gráfica de dona -->
-          <div class="panel">
-            <div class="panel-titulo">
-              <h2>Distribución de prioridades</h2>
-            </div>
-            <div class="dona-caja">
-              <div class="dona">
-                <div class="dona-centro">
-                  <strong>48</strong>
-                  <small>pacientes</small>
-                </div>
-              </div>
-              <ul class="dona-lista">
-                <li><span class="bolita critica"></span> Crítica <b>10 (21%)</b></li>
-                <li><span class="bolita alta"></span> Alta <b>15 (31%)</b></li>
-                <li><span class="bolita media"></span> Media <b>13 (27%)</b></li>
-                <li><span class="bolita baja"></span> Baja <b>10 (21%)</b></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <!-- ================= TABLA Y ACCIONES RÁPIDAS ================= -->
-        <div class="fila">
-
-          <!-- Últimos pacientes -->
-          <div class="panel">
-            <div class="panel-titulo">
-              <h2>Últimos pacientes registrados</h2>
-              <button class="btn-enlace" id="btnVerTodos">
-                Ver todos <svg class="icono"><use href="#i-flecha-der"/></svg>
-              </button>
-            </div>
-
-            <div class="tabla-caja">
-              <table class="tabla">
-                <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Edad</th>
-                    <th>Fecha/Hora</th>
-                    <th>Prioridad</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>María López</td>
-                    <td>34</td>
-                    <td>2025-04-27 10:24</td>
-                    <td><span class="etiqueta prioridad-2">Prioridad 2</span></td>
-                    <td><span class="etiqueta proceso">En proceso</span></td>
-                  </tr>
-                  <tr>
-                    <td>Juan Pérez</td>
-                    <td>56</td>
-                    <td>2025-04-27 09:50</td>
-                    <td><span class="etiqueta prioridad-3">Prioridad 3</span></td>
-                    <td><span class="etiqueta pendiente">Pendiente</span></td>
-                  </tr>
-                  <tr>
-                    <td>Ana Torres</td>
-                    <td>28</td>
-                    <td>2025-04-27 08:32</td>
-                    <td><span class="etiqueta prioridad-1">Prioridad 1</span></td>
-                    <td><span class="etiqueta proceso">En proceso</span></td>
-                  </tr>
-                  <tr>
-                    <td>Carlos Gómez</td>
-                    <td>41</td>
-                    <td>2025-04-27 07:15</td>
-                    <td><span class="etiqueta prioridad-4">Prioridad 4</span></td>
-                    <td><span class="etiqueta completado">Completado</span></td>
-                  </tr>
-                  <tr>
-                    <td>Lucía Fernández</td>
-                    <td>23</td>
-                    <td>2025-04-26 16:42</td>
-                    <td><span class="etiqueta prioridad-2">Prioridad 2</span></td>
-                    <td><span class="etiqueta completado">Completado</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Acciones rápidas: cada una es un botón -->
-          <div class="panel">
-            <div class="panel-titulo">
-              <h2>Acciones rápidas</h2>
-            </div>
-
-            <div class="acciones">
-              <button class="btn-accion" data-accion="Registrar paciente">
-                <span class="cuadro-icono azul"><svg class="icono"><use href="#i-pacientes"/></svg></span>
-                Registrar paciente
-                <svg class="icono flecha"><use href="#i-flecha-der"/></svg>
-              </button>
-
-              <button class="btn-accion" data-accion="Grabar audio" data-url="{% url 'triage:pagina_audio' %}">
-                <span class="cuadro-icono verde"><svg class="icono"><use href="#i-micro"/></svg></span>
-                Grabar audio
-                <svg class="icono flecha"><use href="#i-flecha-der"/></svg>
-              </button>
-
-              <button class="btn-accion" data-accion="Ver historial">
-                <span class="cuadro-icono morado"><svg class="icono"><use href="#i-ojo"/></svg></span>
-                Ver historial
-                <svg class="icono flecha"><use href="#i-flecha-der"/></svg>
-              </button>
-
-              <button class="btn-accion" data-accion="Generar reporte">
-                <span class="cuadro-icono naranja"><svg class="icono"><use href="#i-archivo"/></svg></span>
-                Generar reporte
-                <svg class="icono flecha"><use href="#i-flecha-der"/></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Aquí puedes agregar más secciones -->
+  <div class="card">
+    <div class="titulo-card"><h2>Actividad reciente</h2></div>
+    <ul class="actividad">
+      {% for r in recientes %}
+      <li>
+        {% if r.prioridad == 'ROJO' %}
+          <span class="ico p-ROJO"><svg class="icono"><use href="#i-alerta"/></svg></span>
+        {% elif r.audio %}
+          <span class="ico" style="background:var(--principal-suave);color:var(--principal)"><svg class="icono"><use href="#i-micro"/></svg></span>
+        {% elif r.estado == 'ATENDIDO' %}
+          <span class="ico p-VERDE"><svg class="icono"><use href="#i-check"/></svg></span>
+        {% else %}
+          <span class="ico" style="background:var(--azul-suave);color:var(--azul)"><svg class="icono"><use href="#i-mas"/></svg></span>
+        {% endif %}
+        <a href="{% url 'triage:registro_detalle' r.pk %}">
+          Triage de <b>{{ r.paciente }}</b>: {{ r.get_prioridad_display }}
+          <small>Hace {{ r.fecha|timesince }}</small>
+        </a>
+      </li>
+      {% empty %}
+      <li class="vacio">Todavía no hay registros.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
 {% endblock %}

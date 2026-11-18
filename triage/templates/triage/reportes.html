@@ -1,0 +1,70 @@
+{% extends 'triage/base.html' %}
+
+{% block titulo %}Reportes{% endblock %}
+
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>Reportes</h1>
+    <p>Resumen de todas las evaluaciones guardadas</p>
+  </div>
+  <a class="boton borde" href="{% url 'triage:exportar_csv' %}"><svg class="icono"><use href="#i-descargar"/></svg> Descargar todo (CSV)</a>
+</div>
+
+<!-- ============ NÚMEROS ============ -->
+<div class="kpis">
+  <div class="kpi"><p>Evaluaciones de triage</p><strong>{{ total }}</strong><small>En total</small></div>
+  <div class="kpi azul"><p>Pacientes</p><strong>{{ total_pacientes }}</strong><small>Registrados</small></div>
+  <div class="kpi morado"><p>Atendidos</p><strong>{{ atendidos }}</strong><small>Ya se les dio atención</small></div>
+  <div class="kpi rojo"><p>Acierto del sistema</p><strong>{{ coincidencia }}%</strong><small style="color:var(--gris)">Sugerencia = prioridad final</small></div>
+</div>
+
+<div class="grid-mitad">
+  <!-- ============ ÚLTIMOS 7 DÍAS ============ -->
+  <div class="card">
+    <h2>Evaluaciones de los últimos 7 días</h2>
+    <div class="barras-dias">
+      {% for d in dias %}
+        <div class="barra-dia">
+          <span class="valor">{{ d.cantidad }}</span>
+          <div class="columna" style="height:{{ d.alto }}%"></div>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="dias-nombres">
+      {% for d in dias %}<span>{{ d.dia|date:"D d" }}</span>{% endfor %}
+    </div>
+  </div>
+
+  <!-- ============ PRIORIDADES ============ -->
+  <div class="card">
+    <h2 style="margin-bottom:18px">Distribución de prioridades</h2>
+    {% for p in prioridades %}
+      <div class="fila-barra">
+        <div class="arriba"><span><span class="bola bola-{{ p.clave }}"></span> {{ p.nombre }}</span><strong>{{ p.cantidad }} ({{ p.porcentaje }}%)</strong></div>
+        <div class="fondo-barra"><div class="relleno {{ p.clave }}" style="width:{{ p.porcentaje }}%"></div></div>
+      </div>
+    {% endfor %}
+
+    <h2 style="margin:26px 0 18px">Estado de atención</h2>
+    {% for nombre, cantidad in estados %}
+      <div class="fila-barra" style="display:flex;justify-content:space-between;font-size:14px">
+        <span>{{ nombre }}</span><strong>{{ cantidad }}</strong>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- ============ SÍNTOMAS MÁS COMUNES ============ -->
+<div class="card">
+  <h2 style="margin-bottom:18px">Síntomas más comunes</h2>
+  {% for s in sintomas %}
+    <div class="fila-barra">
+      <div class="arriba"><span>{{ s.nombre }}</span><strong>{{ s.cantidad }}</strong></div>
+      <div class="fondo-barra"><div class="relleno" style="width:{{ s.ancho }}%"></div></div>
+    </div>
+  {% empty %}
+    <p class="vacio">Todavía no hay síntomas detectados.</p>
+  {% endfor %}
+</div>
+{% endblock %}

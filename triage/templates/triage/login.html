@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TriageVoz | Iniciar sesión</title>
+  <link rel="stylesheet" href="{% static 'triage/style.css' %}?v=4">
+</head>
+<body>
+  <div class="login-fondo">
+    <div class="card login-card">
+      <div class="logo">
+        <span class="logo-cuadro">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><polyline points="2,12 7,12 10,5 14,19 17,12 22,12"/></svg>
+        </span>
+        TriageVoz
+      </div>
+      <p class="sub">Sistema de Reconocimiento de Voz para Triage</p>
+
+      <!-- Si el usuario o la contraseña están mal, Django manda form.errors -->
+      {% if form.errors %}
+        <div class="mensaje error">Usuario o contraseña incorrectos.</div>
+      {% endif %}
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="campo">
+          <label for="id_username">Usuario</label>
+          <input type="text" name="username" id="id_username" autofocus required>
+        </div>
+        <div class="campo">
+          <label for="id_password">Contraseña</label>
+          <input type="password" name="password" id="id_password" required>
+        </div>
+        <!-- next = la página que quería abrir antes de iniciar sesión -->
+        <input type="hidden" name="next" value="{{ next }}">
+        <button type="submit" class="boton">Iniciar sesión</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
