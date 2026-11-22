@@ -16,12 +16,17 @@
         </span>
         TriageVoz
       </div>
-      <p class="sub">Sistema de Reconocimiento de Voz para Triage</p>
+      <p class="sub">Sistema de Reconocimiento de Voz</p>
 
       <!-- Si el usuario o la contraseña están mal, Django manda form.errors -->
       {% if form.errors %}
         <div class="mensaje error">Usuario o contraseña incorrectos.</div>
       {% endif %}
+
+      <!-- Mensaje verde después de crear la cuenta -->
+      {% for mensaje in messages %}
+        <div class="mensaje {{ mensaje.tags }}">{{ mensaje }}</div>
+      {% endfor %}
 
       <form method="post">
         {% csrf_token %}
@@ -37,6 +42,8 @@
         <input type="hidden" name="next" value="{{ next }}">
         <button type="submit" class="boton">Iniciar sesión</button>
       </form>
+
+      <p class="sub" style="margin:20px 0 0">¿No tienes cuenta? <a class="link" href="{% url 'triage:registro' %}">Crear cuenta</a></p>
     </div>
   </div>
 </body>

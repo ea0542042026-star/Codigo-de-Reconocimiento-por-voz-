@@ -4,6 +4,7 @@ from . import views
 app_name = 'triage'
 
 urlpatterns = [
+    path('registro/', views.registro, name='registro'),             # crear cuenta
     path('', views.inicio, name='inicio'),                          # grabar
     path('subir/', views.subir_audio, name='subir_audio'),          # recibe el audio
     path('grabaciones/', views.grabaciones, name='grabaciones'),    # lista numerada

@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
+from .forms import RegistroForm
 from .models import Grabacion
 from .services.servicio_transcripcion import ServicioTranscripcion, TranscripcionError
 from .services.transcriptor_whisper import TranscriptorWhisper
@@ -29,6 +30,21 @@ def transcribir(grabacion):
     except TranscripcionError as error:
         grabacion.error = str(error)
         grabacion.save(update_fields=['error'])
+
+
+# =========================================================
+# 0. CREAR CUENTA
+# =========================================================
+def registro(request):
+    """Página para que una persona cree su propio usuario con su correo."""
+    if request.user.is_authenticated:
+        return redirect('triage:inicio')
+    form = RegistroForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        usuario = form.save()      # Django guarda la contraseña cifrada
+        messages.success(request, f'Cuenta "{usuario.username}" creada. Ya puedes iniciar sesión.')
+        return redirect('login')
+    return render(request, 'triage/registro.html', {'form': form})
 
 
 # =========================================================

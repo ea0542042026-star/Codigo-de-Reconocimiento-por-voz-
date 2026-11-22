@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TriageVoz | Crear cuenta</title>
+  <link rel="stylesheet" href="{% static 'triage/style.css' %}?v=5">
+</head>
+<body>
+  <div class="login-fondo">
+    <div class="card login-card formulario" style="max-width:440px">
+      <div class="logo">
+        <span class="logo-cuadro">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><polyline points="2,12 7,12 10,5 14,19 17,12 22,12"/></svg>
+        </span>
+        TriageVoz
+      </div>
+      <p class="sub">Crea tu cuenta para guardar tus grabaciones</p>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <!-- Recorre los campos del formulario: usuario, nombre, correo y las dos contraseñas -->
+        {% for campo in form %}
+          <div class="campo {% if campo.errors %}con-error{% endif %}">
+            <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+            {{ campo }}
+            {% for error in campo.errors %}<p class="error">{{ error }}</p>{% endfor %}
+          </div>
+        {% endfor %}
+        <button type="submit" class="boton">Crear cuenta</button>
+      </form>
+
+      <p class="sub" style="margin:20px 0 0">¿Ya tienes cuenta? <a class="link" href="{% url 'login' %}">Iniciar sesión</a></p>
+    </div>
+  </div>
+</body>
+</html>

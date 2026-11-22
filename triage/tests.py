@@ -80,3 +80,28 @@ class GrabacionesTest(TestCase):
         self.assertEqual(Grabacion.objects.count(), 0)
         import os
         self.assertFalse(os.path.exists(audio) or os.path.exists(texto))
+
+
+class RegistroTest(TestCase):
+
+    def datos(self, **cambios):
+        datos = {'username': 'maria', 'first_name': 'María López', 'email': 'maria@correo.com',
+                 'password1': 'ClaveSegura2026', 'password2': 'ClaveSegura2026'}
+        datos.update(cambios)
+        return datos
+
+    def test_crear_cuenta_con_correo(self):
+        respuesta = self.client.post(reverse('triage:registro'), self.datos())
+        self.assertRedirects(respuesta, reverse('login'))
+        usuario = User.objects.get(username='maria')
+        self.assertEqual(usuario.email, 'maria@correo.com')
+        self.assertTrue(self.client.login(username='maria', password='ClaveSegura2026'))
+
+    def test_correo_repetido(self):
+        self.client.post(reverse('triage:registro'), self.datos())
+        self.client.post(reverse('triage:registro'), self.datos(username='otra'))
+        self.assertEqual(User.objects.count(), 1)
+
+    def test_contrasenas_distintas(self):
+        self.client.post(reverse('triage:registro'), self.datos(password2='OtraCosa2026'))
+        self.assertEqual(User.objects.count(), 0)
