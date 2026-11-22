@@ -2,7 +2,7 @@
 
 Proyecto 3 de la cátedra **Programación Orientada a Objetos** (Ciclo II, 2026) — PRY-TRI-003.
 
-El sistema graba o recibe audio, lo convierte a texto con **Whisper**, extrae síntomas con **NLP** y propone una prioridad de atención. Está hecho con **Python + Django + SQLite**.
+El sistema graba o recibe audio, lo numera, lo guarda y lo convierte a texto con **Whisper**. Está hecho con **Python + Django + SQLite**.
 
 > El sistema es una herramienta de apoyo. La clasificación automática **no sustituye** el criterio del personal médico. Solo se usan datos ficticios.
 
