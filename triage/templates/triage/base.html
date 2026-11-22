@@ -7,7 +7,7 @@
   <title>TriageVoz | {% block titulo %}Inicio{% endblock %}</title>
 
   <!-- Enlace al archivo de estilos (style.css) -->
-  <link rel="stylesheet" href="{% static 'triage/style.css' %}?v=4">
+  <link rel="stylesheet" href="{% static 'triage/style.css' %}?v=5">
 
   <!-- Aquí cada página puede agregar sus propios estilos -->
   {% block estilos %}{% endblock %}
@@ -49,19 +49,15 @@
     <!-- El nombre de la página actual sirve para marcar la opción activa -->
     {% with pagina=request.resolver_match.url_name %}
     <nav class="nav" id="nav">
-      <a href="{% url 'triage:inicio' %}" class="{% if pagina == 'inicio' %}activo{% endif %}">Inicio</a>
-      <a href="{% url 'triage:pacientes' %}" class="{% if 'paciente' in pagina %}activo{% endif %}">Pacientes</a>
-      <a href="{% url 'triage:pagina_audio' %}" class="{% if pagina == 'pagina_audio' %}activo{% endif %}">Grabación</a>
-      <a href="{% url 'triage:registro_nuevo' %}" class="{% if pagina == 'registro_nuevo' %}activo{% endif %}">Triage</a>
-      <a href="{% url 'triage:historial' %}" class="{% if pagina == 'historial' or pagina == 'registro_detalle' %}activo{% endif %}">Historial</a>
-      <a href="{% url 'triage:reportes' %}" class="{% if pagina == 'reportes' %}activo{% endif %}">Reportes</a>
+      <a href="{% url 'triage:inicio' %}" class="{% if pagina == 'inicio' %}activo{% endif %}">Grabar</a>
+      <a href="{% url 'triage:grabaciones' %}" class="{% if pagina != 'inicio' %}activo{% endif %}">Mis grabaciones</a>
     </nav>
     {% endwith %}
 
     <div class="barra-derecha">
-      <!-- Buscador rápido: busca en la lista de pacientes -->
-      <form class="buscar-rapido" action="{% url 'triage:pacientes' %}" method="get">
-        <input type="search" name="q" placeholder="Buscar paciente...">
+      <!-- Buscador rápido: busca palabras dentro de los textos -->
+      <form class="buscar-rapido" action="{% url 'triage:grabaciones' %}" method="get">
+        <input type="search" name="q" placeholder="Buscar en las grabaciones...">
       </form>
 
       <!-- Usuario con su menú desplegable -->
@@ -70,7 +66,7 @@
           <span class="avatar">{{ user.username|first }}</span>
           <span class="usuario-texto">
             <strong>{{ user.get_full_name|default:user.username }}</strong>
-            <small>{% if user.is_superuser %}Administrador{% else %}Personal de salud{% endif %}</small>
+            <small>{% if user.is_superuser %}Administrador{% else %}Usuario{% endif %}</small>
           </span>
         </button>
         <div class="menu-usuario" id="menuUsuario">
@@ -98,11 +94,11 @@
 
   <!-- ================= PIE DE PÁGINA ================= -->
   <footer class="pie">
-    <strong>TriageVoz</strong> | Sistema de Reconocimiento de Voz para Triage · Herramienta de apoyo: la decisión final es del personal de salud.
+    <strong>TriageVoz</strong> | Sistema de Reconocimiento de Voz
   </footer>
 
   <!-- Enlace al archivo de JavaScript -->
-  <script src="{% static 'triage/script.js' %}?v=4"></script>
+  <script src="{% static 'triage/script.js' %}?v=5"></script>
 
   <!-- Aquí cada página puede agregar su propio JavaScript -->
   {% block scripts %}{% endblock %}

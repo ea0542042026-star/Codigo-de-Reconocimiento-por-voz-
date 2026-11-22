@@ -1,100 +1,55 @@
+from django.core.files.base import ContentFile
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
 
 
-class Paciente(models.Model):
-    """Datos básicos del paciente que llega a emergencias (datos ficticios)."""
+class Grabacion(models.Model):
+    """Una grabación de voz con su número y el texto que sacó Whisper."""
 
-    SEXO = [
-        ('M', 'Masculino'),
-        ('F', 'Femenino'),
-    ]
+    numero = models.PositiveIntegerField('Número', unique=True)
 
-    nombres = models.CharField('Nombres', max_length=100)
-    apellidos = models.CharField('Apellidos', max_length=100)
-    edad = models.PositiveIntegerField('Edad', validators=[MaxValueValidator(120)])
-    sexo = models.CharField('Sexo', max_length=1, choices=SEXO)
-    telefono = models.CharField('Teléfono', max_length=15, blank=True)
-    fecha_registro = models.DateTimeField('Fecha de registro', auto_now_add=True)
+    # El audio se guarda en media/reconocimiento_de_voz/
+    audio = models.FileField('Audio', upload_to='reconocimiento_de_voz/')
 
-    class Meta:
-        verbose_name = 'Paciente'
-        verbose_name_plural = 'Pacientes'
-        ordering = ['apellidos', 'nombres']
+    # El texto se guarda en la base de datos y también como archivo .txt
+    # en media/transcripciones/
+    texto = models.TextField('Texto', blank=True)
+    archivo_texto = models.FileField('Archivo de texto', upload_to='transcripciones/', blank=True)
 
-    def __str__(self):
-        return f'{self.nombres} {self.apellidos}'
-
-    def ultimo_registro(self):
-        """Devuelve la evaluación de triage más reciente del paciente."""
-        return self.registros.first()
-
-
-class RegistroTriage(models.Model):
-    """Una evaluación de triage de un paciente."""
-
-    PRIORIDAD = [
-        ('ROJO', 'Rojo - Emergencia'),
-        ('AMARILLO', 'Amarillo - Urgencia'),
-        ('VERDE', 'Verde - No urgente'),
-    ]
-
-    ESTADO = [
-        ('ESPERA', 'En espera'),
-        ('ATENCION', 'En atención'),
-        ('ATENDIDO', 'Atendido'),
-    ]
-
-    paciente = models.ForeignKey(
-        Paciente, on_delete=models.CASCADE,
-        related_name='registros', verbose_name='Paciente',
-    )
-    motivo = models.TextField('Motivo de consulta')
-    transcripcion = models.TextField('Texto dictado', blank=True)
-    audio = models.FileField('Audio', upload_to='audios/', blank=True)
-
-    # Signos vitales (pueden quedar vacíos)
-    presion_sistolica = models.PositiveIntegerField(
-        'Presión sistólica (mmHg)', null=True, blank=True,
-        validators=[MinValueValidator(50), MaxValueValidator(250)])
-    presion_diastolica = models.PositiveIntegerField(
-        'Presión diastólica (mmHg)', null=True, blank=True,
-        validators=[MinValueValidator(30), MaxValueValidator(150)])
-    frecuencia_cardiaca = models.PositiveIntegerField(
-        'Frecuencia cardiaca (lpm)', null=True, blank=True,
-        validators=[MinValueValidator(20), MaxValueValidator(250)])
-    saturacion = models.PositiveIntegerField(
-        'Saturación de oxígeno (%)', null=True, blank=True,
-        validators=[MinValueValidator(50), MaxValueValidator(100)])
-    temperatura = models.DecimalField(
-        'Temperatura (°C)', max_digits=4, decimal_places=1, null=True, blank=True,
-        validators=[MinValueValidator(30), MaxValueValidator(45)])
-    dolor = models.PositiveIntegerField(
-        'Dolor (0 a 10)', null=True, blank=True,
-        validators=[MaxValueValidator(10)])
-
-    # Resultado del análisis automático (NLP + signos vitales)
-    sintomas = models.CharField('Síntomas detectados', max_length=300, blank=True)
-    razones = models.TextField('Razones de la sugerencia', blank=True)
-    prioridad_sugerida = models.CharField(
-        'Prioridad sugerida', max_length=10, choices=PRIORIDAD, blank=True)
-
-    # Decisión final del personal de salud
-    prioridad = models.CharField('Prioridad', max_length=10, choices=PRIORIDAD, default='VERDE')
-    estado = models.CharField('Estado', max_length=10, choices=ESTADO, default='ESPERA')
+    error = models.CharField('Error al transcribir', max_length=300, blank=True)
     fecha = models.DateTimeField('Fecha y hora', auto_now_add=True)
 
     class Meta:
-        verbose_name = 'Registro de triage'
-        verbose_name_plural = 'Registros de triage'
-        ordering = ['-fecha']
+        verbose_name = 'Grabación'
+        verbose_name_plural = 'Grabaciones'
+        ordering = ['-numero']
 
     def __str__(self):
-        return f'{self.paciente} - {self.get_prioridad_display()}'
+        return f'Grabación {self.numero}'
 
-    def lista_sintomas(self):
-        """Devuelve los síntomas como lista para mostrarlos como etiquetas."""
-        return [s.strip() for s in self.sintomas.split(',') if s.strip()]
+    @property
+    def nombre_archivo(self):
+        """Nombre base de los archivos: grabacion_001, grabacion_002..."""
+        return f'grabacion_{self.numero:03d}'
 
-    def lista_razones(self):
-        return [r for r in self.razones.splitlines() if r.strip()]
+    @staticmethod
+    def siguiente_numero():
+        """El número que le toca a la próxima grabación."""
+        ultima = Grabacion.objects.order_by('-numero').first()
+        return ultima.numero + 1 if ultima else 1
+
+    def guardar_texto(self, texto):
+        """Guarda el texto en la base de datos y lo escribe en su archivo .txt."""
+        self.texto = texto.strip()
+        self.error = ''
+        if self.archivo_texto:
+            self.archivo_texto.delete(save=False)   # borra el .txt viejo
+        contenido = ContentFile(self.texto.encode('utf-8'))
+        self.archivo_texto.save(self.nombre_archivo + '.txt', contenido, save=False)
+        self.save()
+
+    def borrar_archivos(self):
+        """Borra el audio y el .txt de las carpetas."""
+        if self.audio:
+            self.audio.delete(save=False)
+        if self.archivo_texto:
+            self.archivo_texto.delete(save=False)

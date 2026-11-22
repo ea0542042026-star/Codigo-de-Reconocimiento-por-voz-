@@ -1,6 +1,0 @@
-{# Dibuja un campo del formulario con su etiqueta y sus errores #}
-<div class="campo {% if campo.errors %}con-error{% endif %} {{ clase }}">
-  <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
-  {{ campo }}
-  {% for error in campo.errors %}<p class="error">{{ error }}</p>{% endfor %}
-</div>

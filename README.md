@@ -10,23 +10,28 @@ El sistema graba o recibe audio, lo convierte a texto con **Whisper**, extrae s�
 
 ## 1. Qué hace el sistema
 
+Es una **grabadora de voz**: cada grabación se numera (Grabación 1, 2, 3...), el audio se guarda en una carpeta y el texto que saca **Whisper** se guarda en otra.
+
 | Página | Ruta | Qué hace |
 |---|---|---|
-| Iniciar sesión | `/login/` | Solo entra el personal con usuario y contraseña |
-| Inicio | `/` | Panel con números reales, prioridades de hoy, cola de atención y actividad reciente |
-| Pacientes | `/pacientes/` | Lista con buscador, nuevo, ver, editar y eliminar |
-| Grabación | `/audio/` | Graba con el micrófono (o sube un archivo), lo guarda y lo transcribe con **Whisper** |
-| Triage | `/registro/nuevo/` | Formulario: paciente, motivo, texto dictado y signos vitales. El botón **Analizar** sugiere la prioridad |
-| Detalle | `/registro/<id>/` | Toda la evaluación, el audio, los síntomas detectados y el cambio de estado (En espera, En atención, Atendido) |
-| Historial | `/historial/` | Todas las evaluaciones con buscador, filtros y descarga en CSV (Excel) |
-| Reportes | `/reportes/` | Gráficas de los últimos 7 días, prioridades, estados y síntomas más comunes |
-| Administración | `/admin/` | Panel de Django para manejar usuarios y datos |
+| Iniciar sesión | `/login/` | Solo entra quien tiene usuario y contraseña |
+| Grabar | `/` | Graba con el micrófono (o sube un archivo). Lo numera, lo guarda y lo pasa a texto |
+| Mis grabaciones | `/grabaciones/` | Lista numerada con buscador; se puede escuchar cada audio |
+| Detalle | `/grabaciones/<id>/` | Escuchar, corregir el texto, descargar el `.txt`, volver a transcribir o eliminar |
+| Administración | `/admin/` | Panel de Django |
 
-### Cómo se decide la prioridad (POO)
+### Dónde se guardan los archivos
 
-- `services/analizador_sintomas.py` → **AnalizadorSintomas**: busca palabras clave en el texto (NLP sencillo) y devuelve los síntomas con su nivel.
-- `services/clasificador_triage.py` → **Regla** (clase abstracta) y sus hijas **ReglaSintomas**, **ReglaSignosVitales** y **ReglaDolor**. **ClasificadorTriage** junta las reglas y elige el color más grave (polimorfismo).
-- `services/transcriptor.py`, `transcriptor_whisper.py` y `servicio_transcripcion.py` → pasan el audio a texto con Whisper.
+```
+media/
+├── reconocimiento_de_voz/   grabacion_001.webm, grabacion_002.webm ...
+└── transcripciones/         grabacion_001.txt,  grabacion_002.txt ...
+```
+
+### Clases de POO (carpeta `triage/services/`)
+
+- **Transcriptor** (clase abstracta) → **TranscriptorWhisper** (herencia): pasa el audio a texto con Whisper.
+- **ServicioTranscripcion**: usa cualquier Transcriptor (polimorfismo) y convierte los errores en mensajes claros (**TranscripcionError**).
 
 ---
 
@@ -53,7 +58,6 @@ python -m pip install -r requirements.txt
 # 4. Crear la base de datos, el usuario y datos de ejemplo
 python manage.py migrate
 python manage.py createsuperuser
-python manage.py datos_demo        # opcional: 10 pacientes ficticios
 
 # 5. Encender el servidor
 python manage.py runserver
@@ -72,14 +76,12 @@ Para correr las pruebas automáticas: `python manage.py test triage`
 ```
 ├── config/                     Configuración general (settings.py, urls.py)
 ├── triage/                     App principal
-│   ├── models.py               Paciente y RegistroTriage
-│   ├── forms.py                Formularios con validaciones
+│   ├── models.py               Grabacion (número, audio, texto)
 │   ├── views.py                Lógica de cada página
 │   ├── urls.py                 Rutas de la app
 │   ├── admin.py                Panel /admin/
-│   ├── tests.py                16 pruebas automáticas
-│   ├── services/               Clases de POO: Whisper, NLP y clasificador
-│   ├── management/commands/    datos_demo (datos de ejemplo)
+│   ├── tests.py                7 pruebas automáticas
+│   ├── services/               Clases de POO para Whisper
 │   ├── templates/triage/       Páginas HTML (base.html es el diseño común)
 │   └── static/triage/          style.css y script.js
 ├── manage.py

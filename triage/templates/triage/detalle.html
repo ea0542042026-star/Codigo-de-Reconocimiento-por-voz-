@@ -1,0 +1,55 @@
+{% extends 'triage/base.html' %}
+
+{% block titulo %}{{ g }}{% endblock %}
+
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <p class="migas"><a href="{% url 'triage:grabaciones' %}">Mis grabaciones</a> / {{ g }}</p>
+    <h1>{{ g }}</h1>
+    <p>{{ g.fecha|date:"d/m/Y H:i" }}</p>
+  </div>
+  <!-- Botones para ir a la grabación anterior o siguiente -->
+  <div class="botones" style="margin-top:0">
+    {% if anterior %}<a class="boton gris" href="{% url 'triage:detalle' anterior.pk %}">← Grabación {{ anterior.numero }}</a>{% endif %}
+    {% if siguiente %}<a class="boton gris" href="{% url 'triage:detalle' siguiente.pk %}">Grabación {{ siguiente.numero }} →</a>{% endif %}
+  </div>
+</div>
+
+<div class="grid-mitad">
+  <!-- ============ AUDIO ============ -->
+  <div class="card">
+    <h2>Audio</h2>
+    <p class="sub">Carpeta: media/{{ g.audio.name }}</p>
+    <audio controls src="{{ g.audio.url }}"></audio>
+    <div class="botones">
+      <a class="boton gris" href="{{ g.audio.url }}" download><svg class="icono"><use href="#i-descargar"/></svg> Descargar audio</a>
+      <form method="post" action="{% url 'triage:transcribir_otra_vez' g.pk %}">
+        {% csrf_token %}
+        <button class="boton borde" type="submit">Pasar a texto otra vez</button>
+      </form>
+    </div>
+    {% if g.error %}<div class="mensaje error" style="margin:18px 0 0">{{ g.error }}</div>{% endif %}
+  </div>
+
+  <!-- ============ TEXTO ============ -->
+  <div class="card formulario">
+    <h2>Texto</h2>
+    <p class="sub">{% if g.archivo_texto %}Carpeta: media/{{ g.archivo_texto.name }}{% else %}Todavía no tiene archivo de texto.{% endif %}</p>
+    <form method="post" style="margin-top:12px">
+      {% csrf_token %}
+      <div class="campo">
+        <textarea name="texto" rows="8" placeholder="Escribe o corrige el texto aquí...">{{ g.texto }}</textarea>
+      </div>
+      <div class="botones">
+        <button class="boton" type="submit"><svg class="icono"><use href="#i-check"/></svg> Guardar texto</button>
+        {% if g.archivo_texto %}<a class="boton gris" href="{% url 'triage:descargar_texto' g.pk %}"><svg class="icono"><use href="#i-descargar"/></svg> Descargar .txt</a>{% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<div style="text-align:right">
+  <a class="boton gris chico" style="color:var(--rojo)" href="{% url 'triage:eliminar' g.pk %}"><svg class="icono"><use href="#i-basura"/></svg> Eliminar grabación</a>
+</div>
+{% endblock %}

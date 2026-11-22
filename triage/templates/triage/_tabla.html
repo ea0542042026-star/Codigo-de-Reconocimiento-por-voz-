@@ -1,0 +1,24 @@
+{# Tabla de grabaciones que se usa en Inicio y en Mis grabaciones #}
+<div class="tabla-caja">
+  <table>
+    <thead>
+      <tr><th>N.º</th><th>Fecha y hora</th><th>Texto</th><th>Audio</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for g in lista %}
+      <tr data-url="{% url 'triage:detalle' g.pk %}">
+        <td><span class="numero-grabacion">{{ g.numero }}</span></td>
+        <td style="white-space:nowrap">{{ g.fecha|date:"d/m/Y H:i" }}</td>
+        <td>
+          {% if g.texto %}{{ g.texto|truncatechars:80 }}
+          {% else %}<span class="pill p-AMARILLO">Sin texto</span>{% endif %}
+        </td>
+        <td style="min-width:220px"><audio controls preload="none" src="{{ g.audio.url }}" style="margin:0;height:34px"></audio></td>
+        <td><a class="boton borde chico" href="{% url 'triage:detalle' g.pk %}">Ver</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="vacio">{% if buscar %}No hay grabaciones con "{{ buscar }}".{% else %}Todavía no hay grabaciones. ¡Graba la primera!{% endif %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

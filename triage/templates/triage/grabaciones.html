@@ -1,0 +1,24 @@
+{% extends 'triage/base.html' %}
+
+{% block titulo %}Mis grabaciones{% endblock %}
+
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>Mis grabaciones</h1>
+    <p>{{ grabaciones|length }} grabaci{{ grabaciones|length|pluralize:"ón,ones" }}{% if buscar %} con "{{ buscar }}"{% endif %}</p>
+  </div>
+  <a class="boton" href="{% url 'triage:inicio' %}"><svg class="icono"><use href="#i-micro"/></svg> Nueva grabación</a>
+</div>
+
+<div class="card">
+  <!-- Buscador: busca palabras en el texto o el número -->
+  <form class="filtros" method="get">
+    <input type="search" name="q" value="{{ buscar }}" placeholder="Buscar una palabra del texto o el número...">
+    <button class="boton" type="submit">Buscar</button>
+    {% if buscar %}<a class="boton gris" href="{% url 'triage:grabaciones' %}">Limpiar</a>{% endif %}
+  </form>
+
+  {% include 'triage/_tabla.html' with lista=grabaciones %}
+</div>
+{% endblock %}

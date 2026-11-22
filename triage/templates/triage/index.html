@@ -1,113 +1,173 @@
 {% extends 'triage/base.html' %}
 
-{% block titulo %}Inicio{% endblock %}
+{% block titulo %}Grabar{% endblock %}
 
 {% block contenido %}
-<!-- ================= SALUDO Y FECHA ================= -->
 <div class="encabezado">
   <div>
-    <h1>Bienvenido, {{ user.first_name|default:user.username }}</h1>
-    <p>Resumen del área de emergencias</p>
+    <h1>Reconocimiento de voz</h1>
+    <p>Graba tu voz: el audio y su texto se guardan numerados.</p>
   </div>
   <div class="fecha-hoy" id="fechaHoy"></div>
 </div>
 
-<!-- ================= GRABAR + PRIORIDADES DE HOY ================= -->
 <div class="grid-2">
-  <div class="card grabar">
-    <a class="micro" href="{% url 'triage:pagina_audio' %}" aria-label="Iniciar grabación">
-      <span><svg class="icono"><use href="#i-micro"/></svg></span>
-    </a>
-    <div>
-      <h2>Nuevo triage por voz</h2>
-      <p>Presiona el micrófono y describe los síntomas del paciente. El sistema transcribe el audio y sugiere la prioridad de atención.</p>
-      <div class="pasos"><span>1. Grabar</span><span>2. Transcribir</span><span>3. Clasificar</span></div>
+  <!-- ============ GRABADORA ============ -->
+  <div class="card">
+    <div class="grabadora">
+      <p class="sub" style="margin-bottom:22px">Próxima: <strong>Grabación {{ siguiente }}</strong></p>
+      <button id="btnGrabar" class="btn-grabar" aria-label="Grabar">
+        <svg class="icono" id="icoGrabar"><use href="#i-micro"/></svg>
+      </button>
+      <p class="tiempo" id="tiempo">00:00</p>
+      <p class="estado-audio" id="estado">Presiona el micrófono para empezar</p>
+    </div>
+
+    <!-- Resultado: aparece cuando termina -->
+    <div id="resultado" class="oculto">
+      <h2 id="resTitulo"></h2>
+      <audio id="reproductor" controls></audio>
+      <div class="texto-caja" id="resTexto"></div>
       <div class="botones">
-        <a class="boton blanco" href="{% url 'triage:pagina_audio' %}">Iniciar grabación</a>
-        <a class="boton" style="background:rgba(255,255,255,.18)" href="{% url 'triage:registro_nuevo' %}">Llenar sin audio</a>
+        <a class="boton" id="resVer" href="#">Ver y corregir el texto</a>
+        <button class="boton gris" onclick="window.location.reload()">Grabar otra</button>
+      </div>
+    </div>
+
+    <!-- Subir un archivo que ya existe -->
+    <div class="subir-archivo">
+      <p class="sub">¿Ya tienes un audio? (wav, mp3, webm, m4a u ogg, máximo 25 MB)</p>
+      <div class="botones" style="margin-top:10px">
+        <input type="file" id="archivo" accept=".wav,.mp3,.webm,.m4a,.ogg">
+        <button id="btnEnviarArchivo" class="boton borde">Subir</button>
       </div>
     </div>
   </div>
 
-  <div class="card">
-    <h2>Prioridades de hoy</h2>
-    <p class="sub">Pacientes evaluados hoy según su urgencia</p>
-    <a class="prioridad-caja p-ROJO" href="{% url 'triage:historial' %}?prioridad=ROJO">
-      <span class="nombre"><span class="bola bola-ROJO"></span>Rojo · Emergencia</span><span class="num">{{ hoy.ROJO }}</span>
-    </a>
-    <a class="prioridad-caja p-AMARILLO" href="{% url 'triage:historial' %}?prioridad=AMARILLO">
-      <span class="nombre"><span class="bola bola-AMARILLO"></span>Amarillo · Urgencia</span><span class="num">{{ hoy.AMARILLO }}</span>
-    </a>
-    <a class="prioridad-caja p-VERDE" href="{% url 'triage:historial' %}?prioridad=VERDE">
-      <span class="nombre"><span class="bola bola-VERDE"></span>Verde · No urgente</span><span class="num">{{ hoy.VERDE }}</span>
-    </a>
-  </div>
-</div>
-
-<!-- ================= NÚMEROS GENERALES ================= -->
-<div class="kpis">
-  <div class="kpi"><p>Total de pacientes</p><strong>{{ total_pacientes }}</strong><small>+{{ pacientes_semana }} esta semana</small></div>
-  <div class="kpi azul"><p>Audios procesados</p><strong>{{ total_audios }}</strong><small>Grabaciones guardadas</small></div>
-  <div class="kpi morado"><p>Transcripciones</p><strong>{{ total_transcripciones }}</strong><small>Textos de Whisper</small></div>
-  <div class="kpi rojo"><p>Alertas rojas activas</p><strong>{{ alertas }}</strong><small>Sin atender todavía</small></div>
-</div>
-
-<!-- ================= COLA Y ACTIVIDAD ================= -->
-<div class="grid-2">
-  <div class="card">
-    <div class="titulo-card">
-      <div>
-        <h2>Cola de atención</h2>
-        <p class="sub">Primero los rojos, luego por hora de llegada</p>
-      </div>
-      <a class="link" href="{% url 'triage:historial' %}">Ver historial →</a>
+  <!-- ============ NÚMEROS Y CARPETAS ============ -->
+  <div>
+    <div class="kpis dos">
+      <div class="kpi"><p>Grabaciones</p><strong>{{ total }}</strong><small>Audios guardados</small></div>
+      <div class="kpi morado"><p>Con texto</p><strong>{{ con_texto }}</strong><small>Pasadas a texto</small></div>
     </div>
-    <div class="tabla-caja">
-      <table>
-        <thead>
-          <tr><th>Paciente</th><th>Edad</th><th>Hora</th><th>Prioridad</th><th>Estado</th><th></th></tr>
-        </thead>
-        <tbody>
-          {% for r in cola %}
-          <tr data-url="{% url 'triage:registro_detalle' r.pk %}">
-            <td><strong>{{ r.paciente }}</strong></td>
-            <td>{{ r.paciente.edad }}</td>
-            <td>{{ r.fecha|date:"H:i" }}</td>
-            <td><span class="pill p-{{ r.prioridad }}">{{ r.get_prioridad_display }}</span></td>
-            <td><span class="pill estado-{{ r.estado }}">{{ r.get_estado_display }}</span></td>
-            <td><a class="boton borde chico" href="{% url 'triage:registro_detalle' r.pk %}">Ver</a></td>
-          </tr>
-          {% empty %}
-          <tr><td colspan="6" class="vacio">No hay pacientes esperando. 🎉</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
+
+    <div class="card">
+      <h2>¿Dónde se guardan?</h2>
+      <ul class="carpetas">
+        <li><span class="ico-carpeta"><svg class="icono"><use href="#i-micro"/></svg></span>
+          <div><strong>media/reconocimiento_de_voz/</strong><small>Los audios: grabacion_001.webm, grabacion_002.webm...</small></div></li>
+        <li><span class="ico-carpeta morado"><svg class="icono"><use href="#i-archivo"/></svg></span>
+          <div><strong>media/transcripciones/</strong><small>Los textos: grabacion_001.txt, grabacion_002.txt...</small></div></li>
+      </ul>
     </div>
   </div>
-
-  <div class="card">
-    <div class="titulo-card"><h2>Actividad reciente</h2></div>
-    <ul class="actividad">
-      {% for r in recientes %}
-      <li>
-        {% if r.prioridad == 'ROJO' %}
-          <span class="ico p-ROJO"><svg class="icono"><use href="#i-alerta"/></svg></span>
-        {% elif r.audio %}
-          <span class="ico" style="background:var(--principal-suave);color:var(--principal)"><svg class="icono"><use href="#i-micro"/></svg></span>
-        {% elif r.estado == 'ATENDIDO' %}
-          <span class="ico p-VERDE"><svg class="icono"><use href="#i-check"/></svg></span>
-        {% else %}
-          <span class="ico" style="background:var(--azul-suave);color:var(--azul)"><svg class="icono"><use href="#i-mas"/></svg></span>
-        {% endif %}
-        <a href="{% url 'triage:registro_detalle' r.pk %}">
-          Triage de <b>{{ r.paciente }}</b>: {{ r.get_prioridad_display }}
-          <small>Hace {{ r.fecha|timesince }}</small>
-        </a>
-      </li>
-      {% empty %}
-      <li class="vacio">Todavía no hay registros.</li>
-      {% endfor %}
-    </ul>
-  </div>
 </div>
+
+<!-- ============ ÚLTIMAS GRABACIONES ============ -->
+<div class="card">
+  <div class="titulo-card">
+    <h2>Últimas grabaciones</h2>
+    <a class="link" href="{% url 'triage:grabaciones' %}">Ver todas →</a>
+  </div>
+  {% include 'triage/_tabla.html' with lista=recientes %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // 1. Datos que Django escribe en la página
+  const csrf = '{{ csrf_token }}';
+  const urlSubir = '{% url "triage:subir_audio" %}';
+
+  const btnGrabar = document.getElementById('btnGrabar');
+  const icoGrabar = document.getElementById('icoGrabar').querySelector('use');
+  const estado = document.getElementById('estado');
+  const tiempo = document.getElementById('tiempo');
+
+  // 2. Mensaje en verde (ok), rojo (error) o gris (normal)
+  function mostrar(mensaje, tipo) {
+    estado.textContent = mensaje;
+    estado.className = 'estado-audio ' + (tipo || '');
+  }
+
+  // 3. Enviar el audio: el servidor lo numera, lo guarda y lo pasa a texto
+  async function enviar(datos, urlLocal) {
+    mostrar('Guardando y pasando a texto... (la primera vez tarda un poco)');
+    btnGrabar.disabled = true;
+    try {
+      const respuesta = await fetch(urlSubir, { method: 'POST', headers: { 'X-CSRFToken': csrf }, body: datos });
+      const json = await respuesta.json();
+      if (!json.ok) {
+        btnGrabar.disabled = false;
+        return mostrar('Error: ' + json.error, 'error');
+      }
+      // Mostrar el resultado
+      document.getElementById('resTitulo').textContent = 'Grabación ' + json.numero + ' guardada';
+      document.getElementById('reproductor').src = urlLocal;
+      document.getElementById('resTexto').textContent = json.texto || ('No se pudo pasar a texto: ' + json.error);
+      document.getElementById('resVer').href = json.url;
+      document.getElementById('resultado').classList.remove('oculto');
+      if (json.error) mostrar('El audio se guardó, pero falta el texto.', 'error');
+      else mostrar('¡Listo! Audio y texto guardados.', 'ok');
+    } catch (e) {
+      btnGrabar.disabled = false;
+      mostrar('Error: no se pudo conectar con el servidor.', 'error');
+    }
+  }
+
+  // 4. Grabar con el micrófono (el mismo botón empieza y detiene)
+  let grabadora = null;
+  let partes = [];
+  let reloj = null;
+  let segundos = 0;
+
+  function iniciarReloj() {
+    segundos = 0;
+    reloj = setInterval(() => {
+      segundos++;
+      const m = String(Math.floor(segundos / 60)).padStart(2, '0');
+      const s = String(segundos % 60).padStart(2, '0');
+      tiempo.textContent = m + ':' + s;
+    }, 1000);
+  }
+
+  btnGrabar.onclick = async () => {
+    if (grabadora && grabadora.state === 'recording') {
+      grabadora.stop();
+      return;
+    }
+    try {
+      const microfono = await navigator.mediaDevices.getUserMedia({ audio: true });
+      grabadora = new MediaRecorder(microfono);
+      partes = [];
+      grabadora.ondataavailable = e => partes.push(e.data);
+      grabadora.onstop = () => {
+        clearInterval(reloj);
+        btnGrabar.classList.remove('grabando');
+        icoGrabar.setAttribute('href', '#i-micro');
+        microfono.getTracks().forEach(pista => pista.stop());
+        const blob = new Blob(partes, { type: 'audio/webm' });
+        const datos = new FormData();
+        datos.append('audio', blob, 'grabacion.webm');
+        enviar(datos, URL.createObjectURL(blob));
+      };
+      grabadora.start();
+      iniciarReloj();
+      btnGrabar.classList.add('grabando');
+      icoGrabar.setAttribute('href', '#i-detener');
+      mostrar('Grabando... presiona otra vez para detener', 'error');
+    } catch (e) {
+      mostrar('Error: no se dio permiso para usar el micrófono.', 'error');
+    }
+  };
+
+  // 5. Subir un archivo que ya existe
+  document.getElementById('btnEnviarArchivo').onclick = () => {
+    const archivo = document.getElementById('archivo').files[0];
+    if (!archivo) return mostrar('Primero elige un archivo de audio.', 'error');
+    const datos = new FormData();
+    datos.append('audio', archivo);
+    enviar(datos, URL.createObjectURL(archivo));
+  };
+</script>
 {% endblock %}

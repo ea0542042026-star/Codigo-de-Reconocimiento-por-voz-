@@ -700,3 +700,43 @@ audio { width: 100%; margin-top: 10px; }
   .formulario .campos, .formulario .campos.tres, .datos { grid-template-columns: 1fr; }
   .encabezado h1 { font-size: 22px; }
 }
+
+/* =========================================================
+   14. GRABACIONES (número, carpetas y subir archivo)
+   ========================================================= */
+.kpis.dos { grid-template-columns: 1fr 1fr; }
+
+.numero-grabacion {
+  display: inline-grid;
+  place-items: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 10px;
+  background: var(--principal-suave);
+  color: var(--principal);
+  font-weight: 700;
+}
+
+.carpetas { list-style: none; margin-top: 14px; }
+.carpetas li { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+.carpetas li:last-child { border-bottom: none; }
+.carpetas small { display: block; color: var(--gris); margin-top: 3px; }
+
+.ico-carpeta {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--principal-suave);
+  color: var(--principal);
+}
+
+.ico-carpeta.morado { background: #ede9fe; color: var(--morado); }
+
+.subir-archivo { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--borde); }
+.subir-archivo input[type=file] { font-size: 13px; }
+
+#resultado { margin-top: 8px; padding-top: 18px; border-top: 1px solid var(--borde); }
