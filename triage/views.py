@@ -44,7 +44,7 @@ def registro(request):
         usuario = form.save()      # Django guarda la contraseña cifrada
         messages.success(request, f'Cuenta "{usuario.username}" creada. Ya puedes iniciar sesión.')
         return redirect('login')
-    return render(request, 'triage/registro.html', {'form': form})
+    return render(request, 'registro.html', {'form': form})
 
 
 # =========================================================
@@ -53,7 +53,7 @@ def registro(request):
 @login_required
 def inicio(request):
     """Página para grabar. Abajo muestra las últimas grabaciones."""
-    return render(request, 'triage/index.html', {
+    return render(request, 'index.html', {
         'total': Grabacion.objects.count(),
         'con_texto': Grabacion.objects.exclude(texto='').count(),
         'siguiente': Grabacion.siguiente_numero(),
@@ -110,7 +110,7 @@ def grabaciones(request):
         if buscar.isdigit():
             filtro |= Q(numero=int(buscar))
         lista = lista.filter(filtro)
-    return render(request, 'triage/grabaciones.html', {'grabaciones': lista, 'buscar': buscar})
+    return render(request, 'grabaciones.html', {'grabaciones': lista, 'buscar': buscar})
 
 
 # =========================================================
@@ -128,7 +128,7 @@ def detalle(request, pk):
     # Para los botones "anterior" y "siguiente"
     anterior = Grabacion.objects.filter(numero__lt=grabacion.numero).order_by('-numero').first()
     siguiente = Grabacion.objects.filter(numero__gt=grabacion.numero).order_by('numero').first()
-    return render(request, 'triage/detalle.html', {
+    return render(request, 'detalle.html', {
         'g': grabacion, 'anterior': anterior, 'siguiente': siguiente,
     })
 
@@ -166,4 +166,4 @@ def eliminar(request, pk):
         grabacion.delete()
         messages.success(request, f'{nombre} eliminada.')
         return redirect('triage:grabaciones')
-    return render(request, 'triage/eliminar.html', {'g': grabacion})
+    return render(request, 'eliminar.html', {'g': grabacion})

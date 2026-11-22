@@ -1,4 +1,4 @@
-{% extends 'triage/base.html' %}
+{% extends 'base.html' %}
 
 {% block titulo %}Grabar{% endblock %}
 
@@ -69,7 +69,7 @@
     <h2>Últimas grabaciones</h2>
     <a class="link" href="{% url 'triage:grabaciones' %}">Ver todas →</a>
   </div>
-  {% include 'triage/_tabla.html' with lista=recientes %}
+  {% include '_tabla.html' with lista=recientes %}
 </div>
 {% endblock %}
 

@@ -82,8 +82,10 @@ Para correr las pruebas automáticas: `python manage.py test triage`
 │   ├── admin.py                Panel /admin/
 │   ├── tests.py                7 pruebas automáticas
 │   ├── services/               Clases de POO para Whisper
-│   ├── templates/triage/       Páginas HTML (base.html es el diseño común)
-│   └── static/triage/          style.css y script.js
+│   └── ...
+│
+├── templates/                Páginas HTML (base.html es el diseño común)
+├── static/                   style.css y script.js
 ├── manage.py
 └── requirements.txt
 ```

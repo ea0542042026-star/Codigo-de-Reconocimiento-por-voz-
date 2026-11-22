@@ -1,4 +1,4 @@
-{% extends 'triage/base.html' %}
+{% extends 'base.html' %}
 
 {% block titulo %}Mis grabaciones{% endblock %}
 
@@ -19,6 +19,6 @@
     {% if buscar %}<a class="boton gris" href="{% url 'triage:grabaciones' %}">Limpiar</a>{% endif %}
   </form>
 
-  {% include 'triage/_tabla.html' with lista=grabaciones %}
+  {% include '_tabla.html' with lista=grabaciones %}
 </div>
 {% endblock %}
